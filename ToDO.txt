@@ -1,0 +1,2 @@
+Do the sums for torques
+Make up or find inertial matrix

@@ -22,8 +22,14 @@ class Rotor(Limb):
         self.C_q = C_q
         self.C_t = C_t
     #returns the force in body frame
-    def force_bf(self):
-        return R.from_euler("zxy",self.rot_vec,)@self.C_t*self.rps**2*np.array([0,0,1])
+    def get_force_bf(self):
+        force_rf = self.C_t*self.rps**2*np.array([0,0,1])
+        rot_mat = R.from_euler("zxy",self.rot_vec)
+        force_bf = rot_mat@force_rf
+        return force_bf
+    
+    def reaction_torque_bf(self):
+        return
     
     
 
