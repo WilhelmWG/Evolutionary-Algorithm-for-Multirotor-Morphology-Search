@@ -1,2 +1,7 @@
+School:
 "C:\Users\wilhelwi\AppData\Local\anaconda3\Scripts\activate"
+conda activate EvolveEnv
+
+Home:
+"C:\Users\Eier\anaconda3\Scripts\activate"
 conda activate EvolveEnv

@@ -1,2 +1,5 @@
-Do the sums for torques
-Make up or find inertial matrix
+Depth-Camera
+Controller
+IMU State Estimation
+Higher order RK-method
+Finish quad.get_depth_frame(obst)
