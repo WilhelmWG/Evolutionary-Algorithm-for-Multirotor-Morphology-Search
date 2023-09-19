@@ -15,6 +15,8 @@ class Limb:
         self.m = m
         self.rot_vec = rot_vec 
         self.t_vec = t_vec
+        self.R = R.from_euler("zxy",rot_vec).as_matrix() #Rotation Matrix
+        self.T = ut.transformation_matrix(self.R,self.t_vec)
 
 class Rotor(Limb):
     def __init__(self, m, rot_vec, t_vec, rps, C_q, C_t):
@@ -48,22 +50,31 @@ class DepthCamera(Limb):
         self.AoV = AoV # Radians [Horizontal, Vertical, Diagonal]
         self.K = K #intrinsic matrix
         self.res = res
-    
+        self.depth_frame = np.zeros((res[0],res[1]))
+        
     def project_point(self, point_cf):
         u_hom = self.K@point_cf
+        
+        if point_cf[2] > 0:
+            infront = True
+        else: infront = False
+
         u = np.array([u_hom[0]/u_hom[2],u_hom[1]/u_hom[2]])
         u = np.round(u)
+        return u, infront
 
-    def depth_frame(self, points_cf):
-        depth_frame = np.zeros((self.res[1],self.res[0]))
-        for point_cf in points_cf:
-            u = self.project_point(point_cf)
-            depth = np.linalg.norm(point_cf) #Don't know if depth = euclid distance or simply Z
-            if (u[0] < self.res[0] and u[0] > 0) and (u[1] < self.res[1] and u[1] > 0):
-                depth_frame[int(u[1]),int(u[0])] = depth
-            
-        return depth_frame
+    def set_depth_frame(self, obst_bf):
+        obst_cf = ut.coordinate_transformation(self.T,obst_bf)
+        depth_frame = np.zeros((self.res[0],self.res[1]))
+        for i in range(obst_cf.shape[1]):
+            u,infront = self.project_point(obst_cf[:3,i])
+            depth = np.linalg.norm(obst_cf[:3,i]) #Don't know if depth = euclid distance or simply Z
+            if (u[0] < self.res[0] and u[0] > 0) and (u[1] < self.res[1] and u[1] > 0) and infront:
+                depth_frame[int(u[0]),int(u[1])] = depth
+        self.depth_frame = depth_frame    
 
+    def get_depth_frame(self):
+        return self.depth_frame
     
 
 
@@ -130,13 +141,19 @@ class MultiRotor:
     def calculate_sum_of_torques_bf(self):
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()
 
-    def get_depth_frames(self, obst_wf):
+    def set_depth_frames(self, obst_wf):
         T = ut.transformation_matrix(self.R,self.t_vec)
-        obst_bf = ut.coordinate_transformation(T)
-        print(obst_bf)
+        obst_bf = ut.coordinate_transformation(T,obst_wf)
+        for dep_cam in self.dep_cams:
+            dep_cam.set_depth_frame(obst_bf)
+    
+    def get_depth_frames(self):
+        depth_frames = []
+        for dep_cam in self.dep_cams:
+            depth_frames.append(dep_cam.depth_frame)
+        return depth_frames
 
-
-    def simulate_timestep(self,delta_t):
+    def simulate_timestep(self,delta_t,obst_wf):
         rot_mat = R.from_euler("zxy",self.rot_vec)
         rot_mat = rot_mat.as_matrix()
         
@@ -159,4 +176,6 @@ class MultiRotor:
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
+        self.set_depth_frames(obst_wf)
+        self.depth_frames = self.get_depth_frames()
 
