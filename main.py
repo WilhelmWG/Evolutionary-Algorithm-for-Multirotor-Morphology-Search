@@ -31,7 +31,7 @@ def main():
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),-10,C_q,C_t))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),10,C_q,C_t))
 
-    dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,0],dtype=float),AoV=AoV,K = K))
+    dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,0],dtype=float),AoV=AoV,K = K,res = res))
     
     quad = mrd.MultiRotor(m_centroid, rot_vec=np.array([0,0,0],dtype=float),t_vec=np.array([1,1,1],dtype=float), ang_vel=np.array([0,0,0],dtype=float), rotors=rotors, dep_cams = dep_cams, IMU = IMU)
     print(f"Quadrotor Inertial Tensor: \n{quad.calculate_inertial_tensor()}")
@@ -40,6 +40,9 @@ def main():
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
     for i in range(100):
         quad.simulate_timestep(0.01)
+    print(quad.t_vec_history)
+    print(quad.rot_vec_history)
+    print(quad.T)
 
 if __name__ == "__main__":
     main()

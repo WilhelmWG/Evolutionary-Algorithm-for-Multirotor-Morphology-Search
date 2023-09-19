@@ -60,7 +60,7 @@ class DepthCamera(Limb):
             u = self.project_point(point_cf)
             depth = np.linalg.norm(point_cf) #Don't know if depth = euclid distance or simply Z
             if (u[0] < self.res[0] and u[0] > 0) and (u[1] < self.res[1] and u[1] > 0):
-                depth_frame[u[1],u[0]] = depth
+                depth_frame[int(u[1]),int(u[0])] = depth
             
         return depth_frame
 
@@ -72,17 +72,23 @@ class MultiRotor:
         self.time = 0
         self.m = m
         
-        self.rot_vec = rot_vec #
+        self.rot_vec = rot_vec #Euler angles
         self.rot_vec_dot = np.zeros((3,))
-        self.t_vec = t_vec
+        self.t_vec = t_vec #translation vector
         self.t_vec_dot = np.zeros((3,))
-        self.ang_vel = ang_vel
+        self.ang_vel = ang_vel #Angular velocity
         self.ang_vel_dot = np.zeros((3,))
-        
+        self.R = R.from_euler("zxy",rot_vec).as_matrix() #Rotation Matrix
+        self.R_dot = np.zeros((3,3))
+        self.T = ut.transformation_matrix(self.R,t_vec)
+
         self.rotors = rotors
         self.dep_cams = dep_cams
         self.IMU = IMU
         self.J = self.calculate_inertial_tensor()
+
+        self.t_vec_history = np.reshape(t_vec,(3,1))
+        self.rot_vec_history = np.reshape(rot_vec,(3,1))
         
     
     def calculate_inertial_tensor(self):
@@ -98,7 +104,7 @@ class MultiRotor:
         t_vec = np.reshape(self.IMU.t_vec,(3,1))
         J += self.IMU.m*(sp.linalg.norm(t_vec)**2*np.eye(3)-(t_vec)@(t_vec.T))
         
-        self.J = J
+        return J
     
     def calculate_sum_of_forces_bf(self):
         sum_force = np.zeros((3,))
@@ -124,17 +130,20 @@ class MultiRotor:
     def calculate_sum_of_torques_bf(self):
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()
 
-    def get_depth_frame(self, obst_wf):
-        obst_bf = self.np.array([obst_wf,np.ones((1,obst_wf.shape[1]))])
+    def get_depth_frames(self, obst_wf):
+        T = ut.transformation_matrix(self.R,self.t_vec)
+        obst_bf = ut.coordinate_transformation(T)
+        print(obst_bf)
 
 
     def simulate_timestep(self,delta_t):
         rot_mat = R.from_euler("zxy",self.rot_vec)
         rot_mat = rot_mat.as_matrix()
         
-        #position
+        #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
-        self.rot_vec += self.rot_vec_dot*delta_t
+        self.R += self.R_dot*delta_t
+        self.rot_vec = R.from_matrix(self.R).as_euler("zxy")
         
         #Angular velocity
         self.ang_vel += self.ang_vel_dot*delta_t
@@ -142,8 +151,12 @@ class MultiRotor:
         #velocity
         self.ang_vel_dot = np.linalg.solve(self.J,(-np.cross(self.ang_vel,self.J@self.ang_vel)+self.calculate_sum_of_torques_bf())) #1d)
         self.t_vec_dot += rot_mat@self.calculate_sum_of_forces_bf()*delta_t #1b)
-        R_dot = rot_mat@ut.skew(self.ang_vel) #1c)
-        rot_dot = R.from_matrix(R_dot)
-        self.rot_vec_dot = rot_dot.as_euler("zxy")*delta_t
+        self.R_dot = rot_mat@ut.skew(self.ang_vel) #1c)
         
         self.time += delta_t
+
+        #update values
+        self.T = ut.transformation_matrix(self.R,self.t_vec)
+        self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
+        self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
+
