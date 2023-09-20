@@ -144,6 +144,18 @@ class MultiRotor:
             sum_torque += np.cross(rotor.t_vec,np.reshape(rotor.get_force_bf(),(3,))) # Cross Displacement with Force
         return sum_torque
     
+    def calculate_torque_from_gravity_bf(self):
+        sum_torque = np.zeros((3,))
+        for rotor in self.rotors:
+            sum_torque += np.cross(rotor.t_vec,np.reshape(self.R.T@np.array([0,0,rotor.m*g]),(3,))) # Cross displacement with Force
+        
+        for dep_cam in self.dep_cams:
+            sum_torque += np.cross(dep_cam.t_vec,np.reshape(self.R.T@np.array([0,0,dep_cam.m*g]),(3,))) # Cross displacement with Force
+        
+        sum_torque += np.cross(self.IMU.t_vec,np.reshape(self.R.T@np.array([0,0,self.IMU.m*g]),(3,))) 
+        
+        return sum_torque
+    
     def calculate_reaction_torque_bf(self):
         sum_torque = np.zeros((3,))
         for rotor in self.rotors:
@@ -151,7 +163,7 @@ class MultiRotor:
         return sum_torque
     
     def calculate_sum_of_torques_bf(self):
-        return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()
+        return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()+self.calculate_torque_from_gravity_bf()
 
     def set_depth_frames(self, obst_wf):
         T = ut.transformation_matrix(self.R,self.t_vec)
