@@ -1,5 +1,8 @@
-Depth-Camera
+Depth-Camera (v)
 Controller
 IMU State Estimation
 Higher order RK-method
 Finish quad.get_depth_frame(obst)
+
+Sources:
+https://www.researchgate.net/figure/Inertial-frame-body-frame-and-Euler-angles-representations_fig2_348966011

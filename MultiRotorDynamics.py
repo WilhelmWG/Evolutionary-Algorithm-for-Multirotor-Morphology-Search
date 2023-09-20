@@ -44,6 +44,9 @@ class IMU(Limb):
     def __init__(self,m,rot_vec,t_vec):
         super().__init__(m,rot_vec,t_vec)
 
+    def get_measurements(self, forces_bf): pass #Not really necessary as forces are determined exactly in MultiRotor.calculate_sum_of_forces_bf(), but might be nice to keep things conceptually valid
+
+
 class DepthCamera(Limb):
     def __init__(self,m,rot_vec,t_vec,AoV,K,res):
         super().__init__(m,rot_vec,t_vec)
@@ -160,7 +163,10 @@ class MultiRotor:
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
         self.R += self.R_dot*delta_t
+
+        #Double transform to maintain SO(3) (Kinda cheating), Should not be included when using ode45
         self.rot_vec = R.from_matrix(self.R).as_euler("zxy")
+        self.R  = R.from_euler("zxy",self.rot_vec).as_matrix()
         
         #Angular velocity
         self.ang_vel += self.ang_vel_dot*delta_t
