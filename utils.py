@@ -14,12 +14,9 @@ def transformation_matrix(R,t):
 
 #Performs a coordinate transformation on the points (3, n) using T (4,4)
 def coordinate_transformation(T, points):
-    print(T)
-    print(points)
     if not (points.shape[0] == 4):
         points = np.append(points,np.ones((1,points.shape[1])),0)
     new_frame_points = np.linalg.solve(T,points)
-    print(new_frame_points)
     return new_frame_points
     
 #Calculates focal_length given AoV and sensor_sizes along [Horizontal, Vertical, Diagonal]

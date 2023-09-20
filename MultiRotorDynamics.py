@@ -103,7 +103,18 @@ class MultiRotor:
 
         self.t_vec_history = np.reshape(t_vec,(3,1))
         self.rot_vec_history = np.reshape(rot_vec,(3,1))
+
+        self.total_mass = self.calculate_total_mass()
         
+    def calculate_total_mass(self):
+        m = 0
+        m += self.m
+        m += self.IMU.m
+        for rotor in self.rotors:
+            m += rotor.m
+        for dep_cam in self.dep_cams:
+            m += dep_cam.m
+        return m
     
     def calculate_inertial_tensor(self):
         J = np.zeros((3,3),dtype=float)
@@ -124,9 +135,7 @@ class MultiRotor:
         sum_force = np.zeros((3,))
         for rotor in self.rotors:
             sum_force += np.reshape(rotor.get_force_bf(),(3,))
-        rot_mat = R.from_euler("zxy",self.rot_vec)
-        rot_mat = rot_mat.as_matrix()
-        sum_force -= np.reshape(rot_mat@rotor.get_force_bf(),(3,))
+        sum_force -= self.R.T@np.array([0,0,self.total_mass*g])#np.reshape(self.R@rotor.get_force_bf(),(3,)) #This doesn't make any sense
         return sum_force
 
     def calculate_torque_from_thrust_bf(self):
@@ -157,9 +166,6 @@ class MultiRotor:
         return depth_frames
 
     def simulate_timestep(self,delta_t,obst_wf):
-        rot_mat = R.from_euler("zxy",self.rot_vec)
-        rot_mat = rot_mat.as_matrix()
-        
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
         self.R += self.R_dot*delta_t
@@ -173,8 +179,8 @@ class MultiRotor:
         
         #velocity
         self.ang_vel_dot = np.linalg.solve(self.J,(-np.cross(self.ang_vel,self.J@self.ang_vel)+self.calculate_sum_of_torques_bf())) #1d)
-        self.t_vec_dot += rot_mat@self.calculate_sum_of_forces_bf()*delta_t #1b)
-        self.R_dot = rot_mat@ut.skew(self.ang_vel) #1c)
+        self.t_vec_dot += self.R@self.calculate_sum_of_forces_bf()*delta_t/self.total_mass #1b)
+        self.R_dot = self.R@ut.skew(self.ang_vel) #1c)
         
         self.time += delta_t
 
@@ -184,4 +190,5 @@ class MultiRotor:
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
         self.set_depth_frames(obst_wf)
         self.depth_frames = self.get_depth_frames()
+        # self.IMU.update_estimates(self.calculate_sum_of_forces_bf(),self.calculate_sum_of_torques_bf())
 

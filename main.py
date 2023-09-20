@@ -35,14 +35,14 @@ def main():
     dep_cams = []
     IMU = mrd.IMU(m_IMU,np.array([0,0,0],dtype=float),np.array([0,0,0],dtype=float))
     #Normal Quadrotor rotors
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-10,C_q,C_t))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),9,C_q,C_t))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),-10,C_q,C_t))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),10,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-0,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),0,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),-0,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),0,C_q,C_t))
 
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
-    quad = mrd.MultiRotor(m_centroid, rot_vec=np.array([0,0,0],dtype=float),t_vec=np.array([1,1,1],dtype=float), ang_vel=np.array([0,0,0],dtype=float), rotors=rotors, dep_cams = dep_cams, IMU = IMU)
+    quad = mrd.MultiRotor(m_centroid, rot_vec=np.array([0,0,np.pi/2],dtype=float),t_vec=np.array([1,1,1],dtype=float), ang_vel=np.array([0,0,0],dtype=float), rotors=rotors, dep_cams = dep_cams, IMU = IMU)
     print(f"Quadrotor Inertial Tensor: \n{quad.calculate_inertial_tensor()}")
     print(f"Sum Of Forces: {quad.calculate_sum_of_forces_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_thrust_bf()}")
@@ -50,21 +50,21 @@ def main():
     for i in range(300):
         quad.simulate_timestep(delta_t,obst_wf)
     
-    print(quad.t_vec_history)
-    print(quad.rot_vec_history)
+    # print(quad.t_vec_history)
+    # print(quad.rot_vec_history)
     print(quad.T)
-    print(np.linalg.norm(quad.T[:,0]))
-    print(np.linalg.norm(quad.T[:,1]))
-    print(np.linalg.norm(quad.T[:,2]))
-    print(np.linalg.norm(quad.T[0,:3]))
-    print(np.linalg.norm(quad.T[1,:3]))
-    print(np.linalg.norm(quad.T[2,:3]))
-    print(quad.dep_cams[0].depth_frame.shape)
-    print(np.max(quad.dep_cams[0].depth_frame))
-    print(np.unravel_index(np.argmax(quad.dep_cams[0].depth_frame),quad.dep_cams[0].depth_frame.shape))
+    # print(np.linalg.norm(quad.T[:,0]))
+    # print(np.linalg.norm(quad.T[:,1]))
+    # print(np.linalg.norm(quad.T[:,2]))
+    # print(np.linalg.norm(quad.T[0,:3]))
+    # print(np.linalg.norm(quad.T[1,:3]))
+    # print(np.linalg.norm(quad.T[2,:3]))
+    # print(quad.dep_cams[0].depth_frame.shape)
+    # print(np.max(quad.dep_cams[0].depth_frame))
+    # print(np.unravel_index(np.argmax(quad.dep_cams[0].depth_frame),quad.dep_cams[0].depth_frame.shape))
 
-    plt.plot_attitude(quad.rot_vec_history, delta_t)
-    plt.plot_position_3d(quad.t_vec_history,obst_wf)
+    # plt.plot_attitude(quad.rot_vec_history, delta_t)
+    # plt.plot_position_3d(quad.t_vec_history,obst_wf)
 
 
 if __name__ == "__main__":
