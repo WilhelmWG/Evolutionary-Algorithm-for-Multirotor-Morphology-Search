@@ -22,6 +22,13 @@ K = np.array([[1200, 0, res[0]/2],
               [0,1200, res[1]/2],
               [0,0,1]]) #Camera Intrinsics
 
+#IMU parameters
+k_a = 1
+k_m = 1
+k_b = np.reshape(np.array([0.1,0.1,0.1],dtype=float),(1,3)) #k_a/10
+gyro_bias = np.array([0,0,0],dtype=float)
+magnet_bias = np.array([0,0,0],dtype=float)
+
 
 #Simulation parameters
 delta_t = 0.01 #seconds
@@ -34,12 +41,12 @@ obst_wf[0,0] = 5
 def main():
     rotors = []
     dep_cams = []
-    IMU = mrd.IMU(m_IMU,np.array([0,0,0],dtype=float),np.array([0,0,0],dtype=float))
+    IMU = mrd.IMU(m_IMU,np.array([0,0,0],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
     #Normal Quadrotor rotors
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-18,C_q,C_t))
-    rotors.append(mrd.Rotor(m_rotor*2,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),18,C_q,C_t))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),-18,C_q,C_t))
-    rotors.append(mrd.Rotor(m_rotor*2,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),18,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-16,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),16.5,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),-16.5,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),16.5,C_q,C_t))
 
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
@@ -49,7 +56,7 @@ def main():
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_thrust_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_gravity_bf()}")
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
-    for i in range(300):
+    for i in range(100):
         quad.simulate_timestep(delta_t,obst_wf)
         
     
@@ -65,7 +72,8 @@ def main():
     # print(quad.dep_cams[0].depth_frame.shape)
     # print(np.max(quad.dep_cams[0].depth_frame))
     # print(np.unravel_index(np.argmax(quad.dep_cams[0].depth_frame),quad.dep_cams[0].depth_frame.shape))
-
+    print(quad.IMU.R_est)
+    print(quad.IMU.gyro_bias_est)
     plt.plot_attitude(quad.rot_vec_history, delta_t)
     plt.plot_position_3d(quad.t_vec_history,obst_wf)
 

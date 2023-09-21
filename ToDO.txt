@@ -1,6 +1,6 @@
 Depth-Camera (v)
 Controller
-IMU State Estimation
+IMU State Estimation: Currently estimating rotation relative to world frame
 Higher order RK-method
 Finish quad.get_depth_frame(obst) (v)
 torque from gravity (Not necessary as long as multirotor is symmetrical about center of mass) (v)
