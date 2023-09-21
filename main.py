@@ -56,7 +56,7 @@ def main():
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_thrust_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_gravity_bf()}")
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
-    for i in range(100):
+    for i in range(500):
         quad.simulate_timestep(delta_t,obst_wf)
         
     
@@ -74,7 +74,7 @@ def main():
     # print(np.unravel_index(np.argmax(quad.dep_cams[0].depth_frame),quad.dep_cams[0].depth_frame.shape))
     print(quad.IMU.R_est)
     print(quad.IMU.gyro_bias_est)
-    plt.plot_attitude(quad.rot_vec_history, delta_t)
+    plt.plot_attitude(quad.rot_vec_history, quad.IMU.rot_vec_est_history, delta_t)
     plt.plot_position_3d(quad.t_vec_history,obst_wf)
 
 

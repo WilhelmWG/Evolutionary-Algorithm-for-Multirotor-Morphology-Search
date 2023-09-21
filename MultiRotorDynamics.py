@@ -54,8 +54,10 @@ class IMU(Limb):
         self.k_m = k_m
         self.k_b = k_b
         self.R_est = np.eye(3) #combined bodyframe + limbframe
+        self.rot_vec_est = np.zeros((3,))
         self.ang_vel_est = np.zeros((3,))
         self.gyro_bias_est = np.zeros((3,))
+        self.rot_vec_est_history = np.reshape(rot_vec,(3,1))
         
 
     
@@ -84,7 +86,10 @@ class IMU(Limb):
         alpha = ut.skew((self.k_a/g**2*ut.skew(z_lf_est)@acc_meas + self.k_m/np.linalg.norm(A_m_lf)**2*ut.skew(A_m_lf)@m_IMU))
         # self.gyro_bias_est += np.reshape(self.k_b@alpha*delta_t,(3,))
         self.R_est += (self.R_est@ut.skew(ang_vel_meas-self.gyro_bias_est)-alpha)*delta_t
-        self.R_est = R.from_matrix(self.R_est).as_matrix()
+        RR = R.from_matrix(self.R_est)
+        self.R_est = RR.as_matrix()
+        self.rot_vec_est = RR.as_euler("zxy")
+        self.rot_vec_est_history = np.append(self.rot_vec_est_history,np.reshape(self.rot_vec_est,(3,1)),1)
 
         
         

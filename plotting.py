@@ -10,7 +10,7 @@ def data_for_cylinder_along_z(center_x,center_y,radius,height_z):
     y_grid = radius*np.sin(theta_grid) + center_y
     return x_grid,y_grid,z_grid
 
-def plot_attitude(rot_vec_history,delta_t):
+def plot_attitude(rot_vec_history,rot_vec_est_history,delta_t):
     num_data_points = rot_vec_history.shape[1]
     t = np.linspace(0,num_data_points*delta_t,num_data_points)
     ylabels = ["z (radians)","x (radians)","y (radians)"]
@@ -19,6 +19,7 @@ def plot_attitude(rot_vec_history,delta_t):
     for i in range(rot_vec_history.shape[0]):
         
         ax[i].plot(t,rot_vec_history[i])
+        ax[i].plot(t,rot_vec_est_history[i])
 
         ax[i].set(xlabel='time (s)', ylabel=ylabels[i],
         title=titles[i])
