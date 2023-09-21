@@ -88,7 +88,8 @@ class IMU(Limb):
         self.R_est += (self.R_est@ut.skew(ang_vel_meas-self.gyro_bias_est)-alpha)*delta_t
         RR = R.from_matrix(self.R_est)
         self.R_est = RR.as_matrix()
-        self.rot_vec_est = RR.as_euler("zxy")
+        R_bf = R.from_matrix(self.R@self.R_est@self.R.T)
+        self.rot_vec_est = R_bf.as_euler("zxy")
         self.rot_vec_est_history = np.append(self.rot_vec_est_history,np.reshape(self.rot_vec_est,(3,1)),1)
 
         

@@ -23,9 +23,9 @@ K = np.array([[1200, 0, res[0]/2],
               [0,0,1]]) #Camera Intrinsics
 
 #IMU parameters
-k_a = 1
-k_m = 1
-k_b = np.reshape(np.array([0.1,0.1,0.1],dtype=float),(1,3)) #k_a/10
+k_a = 0.01
+k_m = 0.01
+k_b = np.reshape(np.array([0.1,0.1,0.1],dtype=float),(1,3))*0.01 #k_a/10
 gyro_bias = np.array([0,0,0],dtype=float)
 magnet_bias = np.array([0,0,0],dtype=float)
 
@@ -41,7 +41,7 @@ obst_wf[0,0] = 5
 def main():
     rotors = []
     dep_cams = []
-    IMU = mrd.IMU(m_IMU,np.array([0,0,0],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
+    IMU = mrd.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
     #Normal Quadrotor rotors
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-16,C_q,C_t))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),16.5,C_q,C_t))
