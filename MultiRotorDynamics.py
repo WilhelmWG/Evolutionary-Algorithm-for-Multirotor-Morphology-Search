@@ -95,8 +95,40 @@ class IMU(Limb):
         
         
 
+class Controller():
+    def __init__(self,k_x,k_v,k_R,k_omega):
+        self.k_x = k_x
+        self.k_v = k_v
+        self.k_R = k_R
+        self.k_omega = k_omega
+    
+    #ALL THESE ROTATION MATRICES MAY NEED TO BE TRANSPOSED AS THE PAPER IS BEING DUMB, IMPLEMENTED AS IS ATM
+    def calculate_errors(self,m, R_mat,ang_vel,t_vec, t_vec_dot, t_vec_d, t_vec_dot_d, t_vec_dot_dot_d, ang_vel_d, b1_d):
+        e_x = t_vec - t_vec_d
+        e_v = t_vec_dot - t_vec_dot_d
 
+        e3 = np.array([0,0,1],dtype = float)
+        ctrl = -self.k_x*e_x - self.k_v*e_v-m*g*e3+m*t_vec_dot_dot_d
+        b3_d = -ctrl/np.linalg.norm(ctrl)
+        cross31 = np.cross(b3_d,b1_d)
+        b2_d = cross31/np.linalg.norm(cross31)
+        b1_d_new = np.cross(b2_d,b3_d)
+        R_d = np.array([b1_d_new, b2_d,b3_d])
 
+        delta_R = 1/2*(R_d.T@R_mat-R_mat.T@R_d)
+        e_R = ut.unskew(delta_R)
+        e_omega = ang_vel-R_mat.T@R_d@ang_vel_d
+
+        return e_x, e_v, e_R, e_omega
+        
+    #CURRENTLY IMPLEMENTED WITH TRANSPOSED R COMPARED TO PAPER    
+    def calculate_forces(self,m,e_x,e_v,e_R, e_omega, R_mat,R_d, ang_vel, ang_vel_d, ang_vel_dot_d, t_vec_dot_dot_d, J):
+        e3 = np.array([0,0,1],dtype = float)
+        f = -(-self.k_x*e_x-self.k_v*e_v-m*g*e3+m*t_vec_dot_dot_d)@R_mat.T@e3
+        M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat@R_d.T@ang_vel_d-R_mat@R_d.T@ang_vel_dot_d)
+        return f, M
+
+    
 
 
 
@@ -139,9 +171,10 @@ class DepthCamera(Limb):
 
 
 class MultiRotor:
-    def __init__(self, m, rot_vec, t_vec, ang_vel, rotors: List[Rotor], dep_cams: List[DepthCamera], IMU: IMU):
+    def __init__(self, m,  rot_vec, t_vec, ang_vel, rotors: List[Rotor], dep_cams: List[DepthCamera], IMU: IMU, Controller: Controller):
         self.time = 0
         self.m = m
+        
         
         self.rot_vec = rot_vec #Euler angles
         self.rot_vec_dot = np.zeros((3,))
@@ -221,6 +254,9 @@ class MultiRotor:
     
     def calculate_sum_of_torques_bf(self):
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()+self.calculate_torque_from_gravity_bf()
+
+    
+
 
     def set_depth_frames(self, obst_wf):
         T = ut.transformation_matrix(self.R,self.t_vec)

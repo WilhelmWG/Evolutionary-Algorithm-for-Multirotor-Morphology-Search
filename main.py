@@ -37,11 +37,19 @@ obst_wf[2,2] = 5
 obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 
+#controller parameters
+k_x = 1
+k_v = 1
+k_R = 1
+k_omega = 1
+
+
 
 def main():
     rotors = []
     dep_cams = []
     IMU = mrd.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
+    Controller = mrd.Controller(k_x,k_v,k_R,k_omega)
     #Normal Quadrotor rotors
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-16,C_q,C_t))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),16.5,C_q,C_t))
@@ -50,7 +58,7 @@ def main():
 
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
-    quad = mrd.MultiRotor(m_centroid, rot_vec=np.array([0,0,0],dtype=float),t_vec=np.array([1,1,1],dtype=float), ang_vel=np.array([0,0,0],dtype=float), rotors=rotors, dep_cams = dep_cams, IMU = IMU)
+    quad = mrd.MultiRotor(m_centroid, rot_vec=np.array([0,0,0],dtype=float),t_vec=np.array([1,1,1],dtype=float), ang_vel=np.array([0,0,0],dtype=float), rotors=rotors, dep_cams = dep_cams, IMU = IMU, Controller = Controller)
     print(f"Quadrotor Inertial Tensor: \n{quad.calculate_inertial_tensor()}")
     print(f"Sum Of Forces Body Frame: {quad.calculate_sum_of_forces_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_thrust_bf()}")

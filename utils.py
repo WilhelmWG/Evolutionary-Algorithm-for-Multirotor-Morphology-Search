@@ -4,6 +4,10 @@ def skew(x):
                      [x[2], 0, -x[0]],
                      [-x[1], x[0], 0]])
 
+def unskew(R):
+    w = np.array([-R[0,1], R[0,2], -R[1,2]])
+    return w
+
 #Makes transformation matrix from rotation matrix and translation vector
 def transformation_matrix(R,t):
     T = np.zeros((4,4))
