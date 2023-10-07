@@ -6,12 +6,13 @@ import plotting as plt
 #Physical Constants
 g = 9.81
 m_centroid = 0.5
-m_rotor = 0.1
+m_rotor = 1
 m_IMU = 0.1
 m_dep_cam = 0.1
-d = 0.1
-C_q = 0.001 #drag_coefficient
-C_t = 0.01 #Thrust coefficient
+m_total = 4.7
+d = 0.315
+C_q = 8.004e-4 #drag_coefficient
+C_t = 1e-2 #Thrust coefficient
 
 
 #Camera Properties
@@ -32,16 +33,21 @@ magnet_bias = np.array([0,0,0],dtype=float)
 
 #Simulation parameters
 delta_t = 0.01 #seconds
+max_time = 5
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 
 #controller parameters
-k_x = 1
-k_v = 1
-k_R = 1
-k_omega = 1
+k_x = 16*m_total 
+k_v = 5.6*m_total
+k_R = 8.81
+k_omega = 2.54
+
+#Trajectory
+x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.4*np.cos(np.pi*t)])
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0])
 
 
 
@@ -49,22 +55,32 @@ def main():
     rotors = []
     dep_cams = []
     IMU = mrd.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
-    Controller = mrd.Controller(k_x,k_v,k_R,k_omega)
+
+    TrajectoryPlanner = mrd.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
+    Controller = mrd.Controller(k_x,k_v,k_R,k_omega,TrajectoryPlanner)
     #Normal Quadrotor rotors
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-16,C_q,C_t))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),-16.5,C_q,C_t))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),16.5,C_q,C_t))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),-16.5,C_q,C_t))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),16.5,C_q,C_t))
 
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
-    quad = mrd.MultiRotor(m_centroid, rot_vec=np.array([0,0,0],dtype=float),t_vec=np.array([1,1,1],dtype=float), ang_vel=np.array([0,0,0],dtype=float), rotors=rotors, dep_cams = dep_cams, IMU = IMU, Controller = Controller)
+    quad = mrd.MultiRotor(m_centroid,
+                          rot_vec=np.array([0,0,0],dtype=float),
+                          t_vec=np.array([1,1,1],dtype=float),
+                          ang_vel=np.array([0,0,0],dtype=float),
+                          rotors=rotors,
+                          dep_cams = dep_cams,
+                          IMU = IMU, 
+                          Controller = Controller)
+    
     print(f"Quadrotor Inertial Tensor: \n{quad.calculate_inertial_tensor()}")
     print(f"Sum Of Forces Body Frame: {quad.calculate_sum_of_forces_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_thrust_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_gravity_bf()}")
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
-    for i in range(500):
+    for i in range(int(max_time/delta_t)):
         quad.simulate_timestep(delta_t,obst_wf)
         
     
