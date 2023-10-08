@@ -16,6 +16,7 @@ def transformation_matrix(R,t):
     T[3,3] = 1
     return T
 
+     
 #Performs a coordinate transformation on the points (3, n) using T (4,4)
 def coordinate_transformation(T, points):
     if not (points.shape[0] == 4):

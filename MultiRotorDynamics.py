@@ -19,17 +19,19 @@ class Limb:
         self.T = ut.transformation_matrix(self.R,self.t_vec)
 
 class Rotor(Limb):
-    def __init__(self, m, rot_vec, t_vec, rps, C_q, C_t):
+    def __init__(self, m, rot_vec, t_vec, rps, C_q, C_t, sigma):
         super().__init__(m,rot_vec,t_vec)
         self.rps = rps #Rotations per second
+        self.sigma = sigma #which way the rotor rotates
         self.C_q = C_q
         self.C_t = C_t
     
     #returns the force in body frame
     def get_force_bf(self):
-        force_rf = self.C_t*self.rps**2*np.array([0,0,1])
+        force_rf = self.C_t*self.rps**2*np.array([0,0,1])*np.sign(self.rps)*self.sigma
         force_rf = np.reshape(force_rf,(3,1))
         force_bf = self.R@force_rf
+        print(f"force_bf : {force_bf}")
         return force_bf
     
     def get_rps(self):
@@ -39,7 +41,8 @@ class Rotor(Limb):
         self.rps = rps
 
     def force_to_rps(self, force):
-        return np.sqrt(force/self.C_t)
+        print(np.sqrt(np.abs(force)/self.C_t)*np.sign(force)*self.sigma)
+        return np.sqrt(np.abs(force)/self.C_t)*np.sign(force)*self.sigma
 
     def set_force(self, force):
         self.set_rps(self.force_to_rps(force))
@@ -104,10 +107,10 @@ class TrajectoryPlanner():
     def __init__(self, delta_t, max_time, x_d_lambda,b1_d_lambda):
         self.delta_t = delta_t
         self.max_time = max_time
-        self.t = np.linspace(0,max_time,int(max_time/delta_t)) 
+        self.t = np.linspace(0,max_time,int(max_time/delta_t)+1) 
         self.x_d = x_d_lambda(self.t)
-        self.x_dot_d = derivative(self.x_d,self.t,dx=1e-6)
-        self.x_dot_dot_d = derivative(self.x_d,self.t,dx=1e-6,n=2)
+        self.x_dot_d = derivative(x_d_lambda,self.t,dx=1e-6)
+        self.x_dot_dot_d = derivative(x_d_lambda,self.t,dx=1e-6,n=2)
         self.b1_d = b1_d_lambda(self.t)
 
         self.prev_R_d = np.eye(3)
@@ -116,21 +119,20 @@ class TrajectoryPlanner():
 
         
     def get_trajectory(self,time):
-        return self.x_d[int(time/self.delta_t)],self.x_dot_d[int(time/self.delta_t)],self.x_dot_dot_d[int(time/self.delta_t)], self.b1_d[int(time/self.delta_t)]
+        return self.x_d[:,int(time/self.delta_t)],self.x_dot_d[:,int(time/self.delta_t)],self.x_dot_dot_d[:,int(time/self.delta_t)], self.b1_d[:,int(time/self.delta_t)]
 
 
 
 
 
 
-# NEED TO CALCULATE R_DOT_D SUCH THAT R_D.T@R_DOT_D = ANGVEL_D THEN WE CAN DIFFERENTIATE THAT BITCH NAH MEAN
 class Controller():
-    def __init__(self,k_x,k_v,k_R,k_omega, TrajectoryPlanner: TrajectoryPlanner):
+    def __init__(self,k_x,k_v,k_R,k_omega, TrajectoryPlanner: TrajectoryPlanner,rotors: List[Rotor]):
         self.k_x = k_x
         self.k_v = k_v
         self.k_R = k_R
         self.k_omega = k_omega
-        
+        self.allocation_matrix = self.calculate_allocation_matrix(rotors)
         self.TP = TrajectoryPlanner
         
     
@@ -140,7 +142,10 @@ class Controller():
     
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
-        R_mat = R_mat.T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
+        # R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
+        # R_mat = (R_x@R_mat@R_x.T).T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
+        # R_mat = R_mat.T
+
         delta_t = self.TP.delta_t
         e3 = np.array([0,0,1],dtype = float)
         
@@ -162,7 +167,7 @@ class Controller():
         #Calculate ang_vel
         delta_R_d = R_d-self.TP.prev_R_d
         R_d_dot = delta_R_d/delta_t
-        ang_vel_d = R_d.T@R_d_dot
+        ang_vel_d = ut.unskew(R_d.T@R_d_dot)
         delta_ang_vel_d = ang_vel_d-self.TP.prev_ang_vel_d
         self.TP.ang_vel_dot_d = delta_ang_vel_d/self.TP.delta_t
 
@@ -174,18 +179,53 @@ class Controller():
         #update previous with current
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
-
+         # e_omega too big, makes no sense
+        print(f"errors: {e_x, e_v, e_R, e_omega}")
         return e_x, e_v, e_R, e_omega
         
       
-    def calculate_forces(self,m,e_x,e_v,e_R, e_omega, R_mat,R_d, ang_vel, J):
-        R_mat = R_mat.T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
+    def calculate_forces(self,m,e_x,e_v,e_R, e_omega, R_mat, ang_vel, J):
+        # R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
+        # R_mat = (R_x@R_mat@R_x.T).T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
+        # R_mat = R_mat.T
         e3 = np.array([0,0,1],dtype = float)
         x_dot_dot_d = self.traj[2]
 
-        f = -(-self.k_x*e_x-self.k_v*e_v-m*g*e3+m*x_dot_dot_d)@R_mat@e3
-        M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
+        f = (-self.k_x*e_x-self.k_v*e_v-m*g*e3+m*x_dot_dot_d)@R_mat@e3 # THIS IS OPPOSITE SIGN FROM PAPER
+        M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@self.TP.prev_R_d@self.TP.prev_ang_vel_d-R_mat.T@self.TP.prev_R_d@self.TP.ang_vel_dot_d)
         return f, M
+    
+    def calculate_allocation_matrix(self, rotors):
+        e3 = np.array([0,0,1],dtype = float)
+        n_r = 0
+        allocation_matrix = np.array([])
+        for rotor in rotors:
+            n_r += 1
+            gamma = rotor.R@e3
+            gamma_proj = e3.T@gamma #Forces projected on b3 in body frame
+            theta = (ut.skew(rotor.t_vec)+rotor.C_q/rotor.C_t*rotor.sigma*np.eye(3))@gamma
+            allocation_matrix = np.append(allocation_matrix,np.insert(theta,0,gamma_proj))
+        allocation_matrix = np.reshape(allocation_matrix,(4,n_r)).T
+        print(allocation_matrix) 
+        return allocation_matrix
+
+    def force_allocation(self, f, M):
+        
+        forces = np.insert(M,0,f)
+        rotor_forces = np.linalg.solve(self.allocation_matrix,forces) #allocation_matrix@[f1,f2,f3,f4] = [f,M] solves for f1,f2,f3,f4
+        print(f"[f,M] : {forces}")
+        return rotor_forces
+
+    def get_rotor_forces(self,m,J,time,R_mat,ang_vel,t_vec,t_vec_dot):
+        e_x, e_v, e_R, e_omega = self.calculate_errors(m,time,R_mat,ang_vel,t_vec,t_vec_dot)
+        f, M = self.calculate_forces(m,e_x,e_v, e_R, e_omega, R_mat, ang_vel, J)
+        
+        rotor_forces = self.force_allocation(f, M)
+        
+        
+        print(f"rotor_forces : {rotor_forces}")
+        return rotor_forces
+
 
     
 
@@ -248,13 +288,14 @@ class MultiRotor:
         self.rotors = rotors
         self.dep_cams = dep_cams
         self.IMU = IMU
+        self.Controller = Controller
         self.J = self.calculate_inertial_tensor()
 
         self.t_vec_history = np.reshape(t_vec,(3,1))
         self.rot_vec_history = np.reshape(rot_vec,(3,1))
 
         self.total_mass = self.calculate_total_mass()
-        self.TPlanner = TrajectoryPlanner
+        
         
 
     def calculate_total_mass(self):
@@ -316,8 +357,11 @@ class MultiRotor:
     def calculate_sum_of_torques_bf(self):
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()+self.calculate_torque_from_gravity_bf()
 
-    
-
+    def set_rotor_forces(self,rotor_forces):
+        i = 0
+        for rotor in self.rotors:
+            rotor.set_force(rotor_forces[i])
+            i += 1
 
     def set_depth_frames(self, obst_wf):
         T = ut.transformation_matrix(self.R,self.t_vec)
@@ -350,14 +394,17 @@ class MultiRotor:
         self.R_dot = self.R@ut.skew(self.ang_vel) #1c)
         
         self.time += delta_t
-
+        
         #update values
+        rotor_forces = self.Controller.get_rotor_forces(self.total_mass, self.J, self.time,self.R,self.ang_vel,self.t_vec,self.t_vec_dot)
+        self.set_rotor_forces(rotor_forces)
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
         self.set_depth_frames(obst_wf)
         self.depth_frames = self.get_depth_frames()
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
+        
 
         
 
