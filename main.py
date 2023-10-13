@@ -40,7 +40,7 @@ obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 
 #controller parameters
-k_x = 32*m_total 
+k_x = 16*m_total 
 k_v = 5.6*m_total
 k_R = 8.81
 k_omega = 2.54
