@@ -33,7 +33,7 @@ magnet_bias = np.array([0,0,0],dtype=float)
 
 #Simulation parameters
 delta_t = 0.01 #seconds
-max_time = 5
+max_time = 7
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
