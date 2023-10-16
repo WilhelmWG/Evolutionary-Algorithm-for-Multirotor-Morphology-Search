@@ -47,6 +47,24 @@ def plot_position_3d(t_vec_history, obst_wf):
 
     plt.show()
 
+def plot_position_2d(t_vec_history,delta_t):
+    num_data_points = t_vec_history.shape[1]
+    t = np.linspace(0,num_data_points*delta_t,num_data_points)
+    ylabels = ["x (meters)","y (meters)","z (meters)"]
+    titles = ["x","y","z"]
+    fig, ax = plt.subplots(3,1)
+    for i in range(t_vec_history.shape[0]):
+        
+        ax[i].plot(t,t_vec_history[i])
+
+        ax[i].set(xlabel='time (s)', ylabel=ylabels[i],
+        title=titles[i])
+        ax[i].grid()
+
+        fig.savefig("data/test.png")
+    plt.show()
+
+
 # def plot_obst_3d(obst_wf):
 #     fig = plt.figure()
 #     ax = fig.add_subplot(projection='3d')

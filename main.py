@@ -33,7 +33,7 @@ magnet_bias = np.array([0,0,0],dtype=float)
 
 #Simulation parameters
 delta_t = 0.01 #seconds
-max_time = 7
+max_time = 23
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
@@ -42,7 +42,7 @@ obst_wf[0,0] = 5
 #controller parameters
 k_x = 16*m_total 
 k_v = 5.6*m_total
-k_R = 8.81
+k_R = 10
 k_omega = 2.54
 
 #Trajectory
@@ -99,6 +99,7 @@ def main():
     # print(quad.IMU.R_est)
     # print(quad.IMU.gyro_bias_est)
     plt.plot_attitude(quad.rot_vec_history, quad.IMU.rot_vec_est_history, delta_t)
+    plt.plot_position_2d(quad.t_vec_history,delta_t)
     plt.plot_position_3d(quad.t_vec_history,obst_wf)
 
 

@@ -144,9 +144,9 @@ class Controller():
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
         R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
         R_y = R.from_euler("zxy",np.array([0,0,np.pi/2])).as_matrix()
-        R_z = R.from_euler("zxy",np.array([np.pi,0,0])).as_matrix()
+        R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
         print(R_mat)
-        R_mat = (R_x@R_mat).T# This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
+        R_mat = (R_z@R_x@R_mat)# This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
         # R_mat = R_mat.T
 
         delta_t = self.TP.delta_t
@@ -193,15 +193,15 @@ class Controller():
     def calculate_forces(self,m,e_x,e_v,e_R, e_omega, R_mat, ang_vel, J):
         R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
         R_y = R.from_euler("zxy",np.array([0,0,np.pi])).as_matrix()
-        R_z = R.from_euler("zxy",np.array([np.pi,0,0])).as_matrix()
+        R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
         # R_mat = (R_x@R_mat@R_x.T).T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
         # R_mat = R_mat.T
-        R_mat = (R_x@R_mat).T
+        R_mat = (R_z@R_x@R_mat)
         R_d = self.TP.prev_R_d
         e3 = np.array([0,0,1],dtype = float)
         x_dot_dot_d = self.traj[2]
         
-        f = -(-self.k_x*e_x-self.k_v*e_v-m*g*e3+m*x_dot_dot_d)@R_mat@e3 # THIS IS OPPOSITE SIGN FROM PAPER
+        f = -(-self.k_x*e_x-self.k_v*e_v-m*g*e3+m*x_dot_dot_d)@R_mat@e3 
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
         return f, M
     
@@ -337,8 +337,9 @@ class MultiRotor:
         sum_force = np.zeros((3,))
         for rotor in self.rotors:
             sum_force += np.reshape(rotor.get_force_bf(),(3,))
-        # print(f"Sum of Forces: {sum_force}")
+        print(f"Sum of Forces: {sum_force}")
         sum_force -= self.R.T@np.array([0,0,self.total_mass*g])#np.reshape(self.R@rotor.get_force_bf(),(3,)) #This doesn't make any sense
+        print(f"Sum of Forces: {sum_force}")
         return sum_force
 
     def calculate_torque_from_thrust_bf(self):
@@ -350,12 +351,12 @@ class MultiRotor:
     def calculate_torque_from_gravity_bf(self):
         sum_torque = np.zeros((3,))
         for rotor in self.rotors:
-            sum_torque += np.cross(rotor.t_vec,np.reshape(self.R.T@np.array([0,0,rotor.m*g]),(3,))) # Cross displacement with Force
+            sum_torque += np.cross(rotor.t_vec,np.reshape(self.R.T@np.array([0,0,-rotor.m*g]),(3,))) # Cross displacement with Force
         
         for dep_cam in self.dep_cams:
-            sum_torque += np.cross(dep_cam.t_vec,np.reshape(self.R.T@np.array([0,0,dep_cam.m*g]),(3,))) # Cross displacement with Force
+            sum_torque += np.cross(dep_cam.t_vec,np.reshape(self.R.T@np.array([0,0,-dep_cam.m*g]),(3,))) # Cross displacement with Force
         
-        sum_torque += np.cross(self.IMU.t_vec,np.reshape(self.R.T@np.array([0,0,self.IMU.m*g]),(3,))) 
+        sum_torque += np.cross(self.IMU.t_vec,np.reshape(self.R.T@np.array([0,0,-self.IMU.m*g]),(3,))) 
         
         return sum_torque
     
@@ -366,8 +367,8 @@ class MultiRotor:
         return sum_torque
     
     def calculate_sum_of_torques_bf(self):
-        # print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()+self.calculate_torque_from_gravity_bf()}")
-        return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()+self.calculate_torque_from_gravity_bf()
+        print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
+        return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()#+self.calculate_torque_from_gravity_bf()
 
     def set_rotor_forces(self,rotor_forces):
         i = 0
@@ -388,7 +389,9 @@ class MultiRotor:
         return depth_frames
 
     def simulate_timestep(self,delta_t,obst_wf):
+        
         forces_bf = self.calculate_sum_of_forces_bf()
+        print(self.R@forces_bf)
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
         self.R += self.R_dot*delta_t
