@@ -40,13 +40,13 @@ obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 
 #controller parameters
-k_x = 16*m_total 
+k_x = 100*m_total 
 k_v = 5.6*m_total
 k_R = 10
 k_omega = 2.54
 
 #Trajectory
-x_d = lambda t : np.array([0*t,0*t,1*t])# x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])
+x_d = lambda t : np.array([0*t,1*t,1*t])# x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])
 b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 
 
