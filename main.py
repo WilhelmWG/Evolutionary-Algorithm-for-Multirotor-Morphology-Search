@@ -33,16 +33,16 @@ magnet_bias = np.array([0,0,0],dtype=float)
 
 #Simulation parameters
 delta_t = 0.01 #seconds
-max_time = 23
+max_time = 5
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 
 #controller parameters
-k_x = 100*m_total 
+k_x = 16*m_total 
 k_v = 5.6*m_total
-k_R = 10
+k_R = 8.81
 k_omega = 2.54
 
 #Trajectory
@@ -59,16 +59,16 @@ def main():
     TrajectoryPlanner = mrd.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
     
     #Normal Quadrotor rotors
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),0,C_q,C_t,-1))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),0,C_q,C_t,1))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),0,C_q,C_t,-1))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),0,C_q,C_t,1))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,C_q,C_t,-1))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,C_q,C_t,1))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,C_q,C_t,-1))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,C_q,C_t,1))
     Controller = mrd.Controller(k_x,k_v,k_R,k_omega,TrajectoryPlanner, rotors)
-    dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0.1,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
+    dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
     quad = mrd.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),
-                          t_vec=np.array([0,0,0],dtype=float),
+                          t_vec=np.array([0,-1,-1],dtype=float),
                           ang_vel=np.array([0,0,0],dtype=float),
                           rotors=rotors,
                           dep_cams = dep_cams,
@@ -80,6 +80,8 @@ def main():
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_thrust_bf()}")
     print(f"Sum of Torque From Thrust: {quad.calculate_torque_from_gravity_bf()}")
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
+    # for i in range(int(6)):
+    #     quad.simulate_timestep(delta_t,obst_wf)
     for i in range(int(max_time/delta_t)):
         quad.simulate_timestep(delta_t,obst_wf)
         
