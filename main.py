@@ -46,7 +46,7 @@ k_R = 8.81
 k_omega = 2.54
 
 #Trajectory
-x_d = lambda t : np.array([0*t,1*t,1*t])# x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])
+x_d = lambda t : np.array([0*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 
 
