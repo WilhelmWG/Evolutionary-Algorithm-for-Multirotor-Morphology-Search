@@ -1,13 +1,17 @@
-Depth-Camera (v)
-Controller
-- Calculate errors (v?)
-- Calculate force and moment (v?)
-- Calculate control allocation matrix and allocate forces to rotors (v)
-- Figure out if reversed b3 axis makes a difference
-- Positive sigma + positive rps = positive force
-- F IS OPPOSITE FROM PAPER BUT b3d DEFINED THE SAME AND I THINK I*VE ROTATED THE MATRIX CORRECTLY; SO THIS IS WEIRD
+ToDo:
 IMU State Estimation: Currently estimating rotation relative to world frame
 Higher order RK-method
+
+Done:
+Depth-Camera (v)
+Controller
+- Calculate errors (v)
+- Calculate force and moment (v)
+- Calculate control allocation matrix and allocate forces to rotors (v)
+- Figure out if reversed b3 axis makes a difference (v)
+- Positive sigma + positive rps = positive force (v)
+- F IS OPPOSITE FROM PAPER BUT b3d DEFINED THE SAME AND I THINK I*VE ROTATED THE MATRIX CORRECTLY; SO THIS IS WEIRD (v)
+
 Finish quad.get_depth_frame(obst) (v)
 torque from gravity (Not necessary as long as multirotor is symmetrical about center of mass) (v)
 
