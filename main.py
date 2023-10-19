@@ -33,7 +33,7 @@ magnet_bias = np.array([0,0,0],dtype=float)
 
 #Simulation parameters
 delta_t = 0.01 #seconds
-max_time = 5
+max_time = 20
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
@@ -46,8 +46,8 @@ k_R = 8.81
 k_omega = 2.54
 
 #Trajectory
-x_d = lambda t : np.array([0*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
-b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 
 
 
@@ -67,7 +67,7 @@ def main():
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
     quad = mrd.MultiRotor(m_centroid,
-                          rot_vec=np.array([0,0,0],dtype=float),
+                          rot_vec=np.array([0,np.pi/2,0],dtype=float),
                           t_vec=np.array([0,-1,-1],dtype=float),
                           ang_vel=np.array([0,0,0],dtype=float),
                           rotors=rotors,
