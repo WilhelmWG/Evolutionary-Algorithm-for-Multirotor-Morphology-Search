@@ -142,12 +142,12 @@ class Controller():
     
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
-        R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
-        R_x2 = R.from_euler("zxy",np.array([0,np.pi/2,0])).as_matrix()
-        R_y = R.from_euler("zxy",np.array([0,0,-np.pi/2])).as_matrix()
-        R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
-        print(R_mat)
-        R_mat = (R_mat)
+        # R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
+        # R_x2 = R.from_euler("zxy",np.array([0,np.pi/2,0])).as_matrix()
+        # R_y = R.from_euler("zxy",np.array([0,0,-np.pi/2])).as_matrix()
+        # R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
+        # # print(R_mat)
+        # R_mat = (R_mat)
         # R_mat = R_mat.T
 
         delta_t = self.TP.delta_t
@@ -185,26 +185,26 @@ class Controller():
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
          # e_omega too big, makes no sense
-        print(R_d)
-        print(R_mat)
-        print(f"errors: {e_x, e_v, e_R, e_omega}\n")
+        # print(R_d)
+        # print(R_mat)
+        # print(f"errors: {e_x, e_v, e_R, e_omega}\n")
         return e_x, e_v, e_R, e_omega
         
       
     def calculate_forces(self,m,e_x,e_v,e_R, e_omega, R_mat, ang_vel, J):
-        R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
-        R_y = R.from_euler("zxy",np.array([0,0,np.pi])).as_matrix()
-        R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
+        # R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
+        # R_y = R.from_euler("zxy",np.array([0,0,np.pi])).as_matrix()
+        # R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
         # R_mat = (R_x@R_mat@R_x.T).T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
         # R_mat = R_mat.T
-        R_mat = (R_mat)
+        # R_mat = (R_mat)
         R_d = self.TP.prev_R_d
         e3 = np.array([0,0,1],dtype = float)
         x_dot_dot_d = self.traj[2]
         
-        print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d))
-        print(R_mat@e3 )
-        print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 )
+        # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d))
+        # print(R_mat@e3 )
+        # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 )
         f = (-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
         
@@ -228,7 +228,7 @@ class Controller():
         
         forces = np.insert(M,0,f)
         rotor_forces = np.linalg.solve(self.allocation_matrix,forces) #allocation_matrix@[f1,f2,f3,f4] = [f,M] solves for f1,f2,f3,f4
-        print(f"[f,M] : {forces}")
+        # print(f"[f,M] : {forces}")
         return rotor_forces
 
     def get_rotor_forces(self,m,J,time,R_mat,ang_vel,t_vec,t_vec_dot):
@@ -238,7 +238,7 @@ class Controller():
         rotor_forces = self.force_allocation(f, M)
         
         
-        print(f"rotor_forces : {rotor_forces}")
+        # print(f"rotor_forces : {rotor_forces}")
         return rotor_forces
 
 
@@ -342,9 +342,9 @@ class MultiRotor:
         sum_force = np.zeros((3,))
         for rotor in self.rotors:
             sum_force += np.reshape(rotor.get_force_bf(),(3,))
-        print(f"Sum of Forces: {sum_force}")
+        # print(f"Sum of Forces: {sum_force}")
         sum_force -= self.R.T@np.array([0,0,self.total_mass*g])#np.reshape(self.R@rotor.get_force_bf(),(3,)) #This doesn't make any sense
-        print(f"Sum of Forces: {sum_force}")
+        # print(f"Sum of Forces: {sum_force}")
         return sum_force
 
     def calculate_torque_from_thrust_bf(self):
@@ -372,7 +372,7 @@ class MultiRotor:
         return sum_torque
     
     def calculate_sum_of_torques_bf(self):
-        print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
+        # print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()#+self.calculate_torque_from_gravity_bf()
 
     def set_rotor_forces(self,rotor_forces):
@@ -396,10 +396,10 @@ class MultiRotor:
     def simulate_timestep(self,delta_t,obst_wf):
         
         forces_bf = self.calculate_sum_of_forces_bf()
-        print(f"Forces in world frame: {self.R@forces_bf}")
+        # print(f"Forces in world frame: {self.R@forces_bf}")
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
-        print(f"x = {self.t_vec}")
+        # print(f"x = {self.t_vec}")
         self.R += self.R_dot*delta_t
 
         #Double transform to maintain SO(3) (Kinda cheating), Should not be included when using ode45

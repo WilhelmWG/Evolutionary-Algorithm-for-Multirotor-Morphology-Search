@@ -67,7 +67,7 @@ def main():
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
     quad = mrd.MultiRotor(m_centroid,
-                          rot_vec=np.array([0,np.pi/2,0],dtype=float),
+                          rot_vec=np.array([0,0,0],dtype=float),
                           t_vec=np.array([0,-1,-1],dtype=float),
                           ang_vel=np.array([0,0,0],dtype=float),
                           rotors=rotors,
