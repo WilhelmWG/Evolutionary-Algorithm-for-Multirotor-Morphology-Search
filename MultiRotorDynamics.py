@@ -205,7 +205,7 @@ class Controller():
         # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d))
         # print(R_mat@e3 )
         # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 )
-        f = (-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 
+        f = (-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d) 
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
         
         return f, M
@@ -219,13 +219,25 @@ class Controller():
             gamma = rotor.R@e3
             gamma_proj = e3.T@gamma #Forces projected on b3 in body frame
             theta = (ut.skew(rotor.t_vec)+rotor.C_q/rotor.C_t*rotor.sigma*np.eye(3))@gamma
+
+            allocation_matrix_full = np.append(allocation_matrix,np.insert(theta,0,gamma))
             allocation_matrix = np.append(allocation_matrix,np.insert(theta,0,gamma_proj))
-        allocation_matrix = np.reshape(allocation_matrix,(4,n_r)).T
-        print(allocation_matrix) 
-        return allocation_matrix
+
+        
+        
+        
+        if (np.linalg.matrix_rank(allocation_matrix_full) == 6):
+            self.fully_actuated = True
+            print(allocation_matrix_full)
+            allocation_matrix_full = np.reshape(allocation_matrix_full,(6,n_r)).T
+            return allocation_matrix_full
+        else:
+            self.fully_actuated = False
+            allocation_matrix = np.reshape(allocation_matrix,(4,n_r)).T
+            print(allocation_matrix) 
+            return allocation_matrix
 
     def force_allocation(self, f, M):
-        
         forces = np.insert(M,0,f)
         rotor_forces = np.linalg.solve(self.allocation_matrix,forces) #allocation_matrix@[f1,f2,f3,f4] = [f,M] solves for f1,f2,f3,f4
         # print(f"[f,M] : {forces}")
@@ -233,10 +245,14 @@ class Controller():
 
     def get_rotor_forces(self,m,J,time,R_mat,ang_vel,t_vec,t_vec_dot):
         e_x, e_v, e_R, e_omega = self.calculate_errors(m,time,R_mat,ang_vel,t_vec,t_vec_dot)
+        e3 = np.array([0,0,1],dtype = float)
+        
         f, M = self.calculate_forces(m,e_x,e_v, e_R, e_omega, R_mat, ang_vel, J)
         
-        rotor_forces = self.force_allocation(f, M)
+        if not self.fully_actuated:
+            f = f@R_mat@e3
         
+        rotor_forces = self.force_allocation(f, M)
         
         # print(f"rotor_forces : {rotor_forces}")
         return rotor_forces
