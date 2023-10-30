@@ -5,11 +5,11 @@ import plotting as plt
 
 #Physical Constants
 g = 9.81
-m_centroid = 3
-m_rotor = 0.5
-m_IMU = 0.1
+m_centroid = 0.8
+m_rotor = 0.15
+m_IMU = 0.05
 m_dep_cam = 0.1
-m_total = 5.2
+m_total = m_centroid + m_rotor*8 + m_IMU + m_dep_cam
 d = 0.315
 C_q = 8.004e-4 #drag_coefficient
 C_t = 1e-2 #Thrust coefficient
