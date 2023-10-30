@@ -1,7 +1,9 @@
 import control as ct
 import numpy as np
+import pygad as ga
 import MultiRotorDynamics as mrd
 import plotting as plt
+
 
 #Physical Constants
 g = 9.81
@@ -65,8 +67,8 @@ def main():
     rotors.append(mrd.Rotor(m_rotor,np.array([0,-np.pi/32,0],dtype=float),np.array([0,-d,0],dtype=float),-20,C_q,C_t,1))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,np.pi/3],dtype=float),np.array([d/np.sqrt(2),d/np.sqrt(2),0],dtype=float),20,C_q,C_t,-1))
     rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d/np.sqrt(2),-d/np.sqrt(2),0],dtype=float),-20,C_q,C_t,1))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,np.pi/2],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),0],dtype=float),20,C_q,C_t,-1))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d/np.sqrt(2),-d/np.sqrt(2),0],dtype=float),-20,C_q,C_t,1))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,np.pi/2],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,C_q,C_t,-1))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d/np.sqrt(2),-d/np.sqrt(2),0.25],dtype=float),-20,C_q,C_t,1))
     Controller = mrd.Controller(k_x,k_v,k_R,k_omega,TrajectoryPlanner, rotors)
     dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     

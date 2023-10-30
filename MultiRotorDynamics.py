@@ -2,7 +2,7 @@ import control as ct
 import numpy as np
 import scipy as sp
 import utils as ut
-import pygad as ga
+
 from typing import List, Tuple
 from scipy.spatial.transform import Rotation as R
 from scipy.integrate import solve_ivp
@@ -10,9 +10,13 @@ from scipy.misc import derivative
 
 
 g = 9.81
+limb_cross_section_cm = 3**2 #3^2cm^2
+carbon_foam_core_density = 0.0000105
+kg_per_cm = limb_cross_section_cm*carbon_foam_core_density
+
 class Limb:
     def __init__(self, m, rot_vec, t_vec):
-        self.m = m
+        self.m = m + np.linalg.norm(t_vec)*kg_per_cm
         self.rot_vec = rot_vec 
         self.t_vec = t_vec
         self.R = R.from_euler("zxy",rot_vec).as_matrix() #Rotation Matrix
@@ -222,21 +226,24 @@ class Controller():
             theta = (ut.skew(rotor.t_vec)+rotor.C_q/rotor.C_t*rotor.sigma*np.eye(3))@gamma
 
             allocation_matrix_full = np.append(allocation_matrix_full,np.insert(theta,0,gamma))
-            print(allocation_matrix_full)
+            # print(allocation_matrix_full)
             allocation_matrix = np.append(allocation_matrix,np.insert(theta,0,gamma_proj))
-            print(allocation_matrix)
+            # print(allocation_matrix)
 
         allocation_matrix_full = np.reshape(allocation_matrix_full,(6,n_r),'F')
         allocation_matrix = np.reshape(allocation_matrix,(4,n_r),'F')
         
-        if (np.linalg.matrix_rank(allocation_matrix_full) == 6):
-            print(6)
+        if (np.linalg.matrix_rank(allocation_matrix) < 4):
+            self.uncontrollable = True
+            return None
+        elif (np.linalg.matrix_rank(allocation_matrix_full) == 6):
+            # print(6)
             self.fully_actuated = True
             
             print(allocation_matrix_full)
             return allocation_matrix_full
         else:
-            print(np.linalg.matrix_rank(allocation_matrix_full))
+            # print(np.linalg.matrix_rank(allocation_matrix_full))
             self.fully_actuated = False
             
             print(allocation_matrix) 
