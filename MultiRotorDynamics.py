@@ -2,6 +2,7 @@ import control as ct
 import numpy as np
 import scipy as sp
 import utils as ut
+import pygad as ga
 from typing import List, Tuple
 from scipy.spatial.transform import Rotation as R
 from scipy.integrate import solve_ivp
@@ -9,7 +10,6 @@ from scipy.misc import derivative
 
 
 g = 9.81
-
 class Limb:
     def __init__(self, m, rot_vec, t_vec):
         self.m = m
@@ -214,32 +214,39 @@ class Controller():
         e3 = np.array([0,0,1],dtype = float)
         n_r = 0
         allocation_matrix = np.array([])
+        allocation_matrix_full = np.array([])
         for rotor in rotors:
             n_r += 1
             gamma = rotor.R@e3
             gamma_proj = e3.T@gamma #Forces projected on b3 in body frame
             theta = (ut.skew(rotor.t_vec)+rotor.C_q/rotor.C_t*rotor.sigma*np.eye(3))@gamma
 
-            allocation_matrix_full = np.append(allocation_matrix,np.insert(theta,0,gamma))
+            allocation_matrix_full = np.append(allocation_matrix_full,np.insert(theta,0,gamma))
+            print(allocation_matrix_full)
             allocation_matrix = np.append(allocation_matrix,np.insert(theta,0,gamma_proj))
+            print(allocation_matrix)
 
-        
-        
+        allocation_matrix_full = np.reshape(allocation_matrix_full,(6,n_r),'F')
+        allocation_matrix = np.reshape(allocation_matrix,(4,n_r),'F')
         
         if (np.linalg.matrix_rank(allocation_matrix_full) == 6):
+            print(6)
             self.fully_actuated = True
+            
             print(allocation_matrix_full)
-            allocation_matrix_full = np.reshape(allocation_matrix_full,(6,n_r)).T
             return allocation_matrix_full
         else:
+            print(np.linalg.matrix_rank(allocation_matrix_full))
             self.fully_actuated = False
-            allocation_matrix = np.reshape(allocation_matrix,(4,n_r)).T
+            
             print(allocation_matrix) 
             return allocation_matrix
 
     def force_allocation(self, f, M):
         forces = np.insert(M,0,f)
-        rotor_forces = np.linalg.solve(self.allocation_matrix,forces) #allocation_matrix@[f1,f2,f3,f4] = [f,M] solves for f1,f2,f3,f4
+        # print(forces)
+        # print(np.linalg.pinv(self.allocation_matrix))
+        rotor_forces = np.linalg.pinv(self.allocation_matrix)@forces #allocation_matrix@[f1,f2,f3,f4] = [f,M] solves for f1,f2,f3,f4
         # print(f"[f,M] : {forces}")
         return rotor_forces
 
