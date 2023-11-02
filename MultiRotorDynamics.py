@@ -2,6 +2,7 @@ import control as ct
 import numpy as np
 import scipy as sp
 import utils as ut
+import MotorRotorAnalysis as MRA
 
 from typing import List, Tuple
 from scipy.spatial.transform import Rotation as R
@@ -9,26 +10,35 @@ from scipy.integrate import solve_ivp
 from scipy.misc import derivative
 
 
+
+
+
 g = 9.81
-limb_cross_section_cm = 3**2 #3^2cm^2
+limb_cross_section_cm = 4**2 #4^2cm^2
 carbon_foam_core_density = 0.0000105
 kg_per_cm = limb_cross_section_cm*carbon_foam_core_density
+motor_dict = MRA.motor_dict
 
 class Limb:
     def __init__(self, m, rot_vec, t_vec):
-        self.m = m + np.linalg.norm(t_vec)*kg_per_cm
+        self.m = m + (np.linalg.norm(t_vec)*100)*kg_per_cm
         self.rot_vec = rot_vec 
         self.t_vec = t_vec
         self.R = R.from_euler("zxy",rot_vec).as_matrix() #Rotation Matrix
         self.T = ut.transformation_matrix(self.R,self.t_vec)
 
 class Rotor(Limb):
-    def __init__(self, m, rot_vec, t_vec, rps, C_q, C_t, sigma):
+    def __init__(self, m, rot_vec, t_vec, rps, sigma, motor_prop_comb_num):
         super().__init__(m,rot_vec,t_vec)
         self.rps = rps #Rotations per second
+        self.maxrps = motor_dict[motor_prop_comb_num]["RPS"][11]
         self.sigma = sigma #which way the rotor rotates
-        self.C_q = C_q
-        self.C_t = C_t
+        self.C_t = motor_dict[motor_prop_comb_num]["C_T"]
+        self.C_q = self.C_t/10
+        self.lowrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["A"][:2], 1))
+        self.lowrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["W"][:2], 1))
+        self.highrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:],motor_dict[motor_prop_comb_num]["A"][1:], 2))
+        self.highrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:],motor_dict[motor_prop_comb_num]["W"][1:], 2))
     
     #returns the force in body frame
     def get_force_bf(self):
@@ -42,7 +52,7 @@ class Rotor(Limb):
         return self.rps
     
     def set_rps(self, rps):
-        self.rps = rps
+        self.rps = np.clip(rps,-self.maxrps,self.maxrps)
 
     def force_to_rps(self, force):
         # print(np.sqrt(np.abs(force)/self.C_t)*np.sign(force)*self.sigma)
