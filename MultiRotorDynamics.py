@@ -30,6 +30,8 @@ class Limb:
 class Rotor(Limb):
     def __init__(self, m, rot_vec, t_vec, rps, sigma, motor_prop_comb_num):
         super().__init__(m,rot_vec,t_vec)
+        self.m += motor_dict[motor_prop_comb_num]["mass"]
+        print(f"mass {self.m}")
         self.rps = rps #Rotations per second
         self.maxrps = motor_dict[motor_prop_comb_num]["RPS"][11]
         self.sigma = sigma #which way the rotor rotates
