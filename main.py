@@ -11,7 +11,7 @@ m_centroid = 0.8
 m_rotor = 0.0 #accounted for
 m_IMU = 0.05
 m_dep_cam = 0.1
-m_total = m_centroid + m_rotor*8 + m_IMU + m_dep_cam
+m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam
 d = 0.315
 C_q = 8.004e-4 #drag_coefficient
 C_t = 1e-2 #Thrust coefficient
@@ -42,10 +42,10 @@ obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 
 #controller parameters
-k_x = 16*m_total 
+k_x = 16*m_total
 k_v = 5.6*m_total
-k_R = 8.81
-k_omega = 2.54
+k_R = 8.81*0.1
+k_omega = 2.54*0.1
 
 #Trajectory
 x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
