@@ -1,13 +1,13 @@
 import control as ct
 import numpy as np
 import pygad as ga
-import MultiRotorDynamics as mrd
+import MultiRotorDynamics as MRD
 import plotting as plt
 
 
 #Physical Constants
 g = 9.81
-m_centroid = 0.8
+m_centroid = 0.122
 m_rotor = 0.0 #accounted for
 m_IMU = 0.05
 m_dep_cam = 0.1
@@ -56,15 +56,15 @@ b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda
 def main():
     rotors = []
     dep_cams = []
-    IMU = mrd.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
+    IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
 
-    TrajectoryPlanner = mrd.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
+    TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
     
     #Normal Quadrotor rotors
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,3))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,3))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,3))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,3))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,3))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,3))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,3))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,3))
     
     
     #Custom
@@ -76,10 +76,10 @@ def main():
     # rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d/np.sqrt(2),-d/np.sqrt(2),0],dtype=float),-20,1,16))
     # rotors.append(mrd.Rotor(m_rotor,np.array([0,0,np.pi/2],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
     # rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d/np.sqrt(2),-d/np.sqrt(2),0.25],dtype=float),-20,1,16))
-    Controller = mrd.Controller(k_x,k_v,k_R,k_omega,TrajectoryPlanner, rotors)
-    dep_cams.append(mrd.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
+    Controller = MRD.Controller(k_x,k_v,k_R,k_omega,TrajectoryPlanner, rotors)
+    dep_cams.append(MRD.DepthCamera(m_dep_cam, rot_vec=np.array([0,0,0],dtype=float), t_vec=np.array([0,0,d],dtype=float),AoV=AoV,K = K,res = res))
     
-    quad = mrd.MultiRotor(m_centroid,
+    quad = MRD.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),
                           t_vec=np.array([0,-1,-1],dtype=float),
                           ang_vel=np.array([0,0,0],dtype=float),

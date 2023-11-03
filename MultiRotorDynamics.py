@@ -484,8 +484,11 @@ class MultiRotor:
         self.depth_frames = self.get_depth_frames()
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
         
-
-        
+    def simulate(self,max_time,delta_t,obst_wf):
+        if(self.maxTzi > 2*g*self.total_mass):
+            print(f"{self.maxTzi} > {2*g*self.total_mass}")
+            for i in range(int(max_time/delta_t)):
+                self.simulate_timestep(delta_t,obst_wf)
 
 
 
