@@ -61,10 +61,11 @@ def main():
     TrajectoryPlanner = mrd.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
     
     #Normal Quadrotor rotors
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,0))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,0))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,0))
-    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,0))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,3))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,3))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,3))
+    rotors.append(mrd.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,3))
+    
     
     #Custom
     # rotors.append(mrd.Rotor(m_rotor,np.array([0,0,-np.pi/32],dtype=float),np.array([d,0,0],dtype=float),20,-1,16))
@@ -94,8 +95,10 @@ def main():
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
     # for i in range(int(6)):
     #     quad.simulate_timestep(delta_t,obst_wf)
-    for i in range(int(max_time/delta_t)):
-        quad.simulate_timestep(delta_t,obst_wf)
+    if(quad.maxTzi > 2*g*quad.total_mass):
+        print(f"{quad.maxTzi} > {2*g*quad.total_mass}")
+        for i in range(int(max_time/delta_t)):
+            quad.simulate_timestep(delta_t,obst_wf)
         
     
     # print(quad.t_vec_history)

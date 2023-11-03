@@ -37,6 +37,8 @@ class Rotor(Limb):
         self.sigma = sigma #which way the rotor rotates
         self.C_t = motor_dict[motor_prop_comb_num]["C_T"]
         self.C_q = self.C_t/10
+
+        self.maxforce = self.C_t*self.maxrps**2
         self.lowrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["A"][:2], 1))
         self.lowrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["W"][:2], 1))
         self.highrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:],motor_dict[motor_prop_comb_num]["A"][1:], 2))
@@ -50,6 +52,13 @@ class Rotor(Limb):
         # print(f"force_bf : {force_bf}")
         return force_bf
     
+    def get_Tzi(self):
+        force_rf = self.C_t*self.maxrps**2*np.array([0,0,1])
+        force_rf = np.reshape(force_rf,(3,1))
+        force_bf = self.R@force_rf
+        # print(f"force_bf : {force_bf}")
+        return np.array([0,0,1])@force_bf
+
     def get_rps(self):
         return self.rps
     
@@ -347,6 +356,7 @@ class MultiRotor:
         self.IMU = IMU
         self.Controller = Controller
         self.J = self.calculate_inertial_tensor()
+        self.maxTzi = self.calculate_sum_of_Tzi()
 
         self.t_vec_history = np.reshape(t_vec,(3,1))
         self.rot_vec_history = np.reshape(rot_vec,(3,1))
@@ -416,6 +426,12 @@ class MultiRotor:
     def calculate_sum_of_torques_bf(self):
         # print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()#+self.calculate_torque_from_gravity_bf()
+
+    def calculate_sum_of_Tzi(self):
+        sum = 0
+        for rotor in self.rotors:
+            sum += rotor.get_Tzi()
+        return sum
 
     def set_rotor_forces(self,rotor_forces):
         i = 0
