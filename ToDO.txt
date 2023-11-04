@@ -1,8 +1,14 @@
 ToDo:
 IMU State Estimation: Currently estimating rotation relative to world frame
 Higher order RK-method
+Add control gains to genotype
+Real trajectoryPlanning with dep_cams
+Add more tests for if a MR is really controllable (saves time)
+Parallelize computing
 
 Done:
+Visualize MR design (v)
+Get GA going (v)
 Depth-Camera (v)
 Controller
 - Calculate errors (v)

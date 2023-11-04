@@ -230,7 +230,7 @@ class Controller():
         # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d))
         # print(R_mat@e3 )
         # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 )
-        f = (-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d) 
+        f = (-m*self.k_x*e_x-m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d) #Added m to k_x and k_v
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
         
         return f, M

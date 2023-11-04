@@ -3,6 +3,8 @@ import pygad as ga
 import MultiRotorDynamics as MRD
 import plotting as plt
 from MotorRotorAnalysis import motor_dict
+
+
 g = 9.81
 #simulation parameters
 obst_wf = np.ones((3,3))*2
@@ -21,8 +23,7 @@ m_dep_cam = 0.03
 m_centroid = 0.122
 m_rotor = 0.0 #accounted for
 m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here
-d = 0.2
-
+d = 0.3
 
 #IMU parameters
 k_a = 0.01
@@ -40,14 +41,21 @@ K = np.array([[1200, 0, res[0]/2],
               [0,0,1]]) #Camera Intrinsics
 
 #controller parameters
-k_x = 16*m_total
-k_v = 5.6*m_total
+k_x = 16
+k_v = 5.6
 k_R = 8.81*0.1
 k_omega = 2.54*0.1
 
+
+
+#GA PARAMS
 #If the user did not assign the initial population to the initial_population parameter,
 # the initial population is created randomly based on the gene_space parameter.
 # Moreover, the mutation is applied based on this parameter.
+
+num_generations = 20
+num_parents_mating = 1
+sol_per_pop = 50
 
 #[num_rotors, num_depcams]
 gene_space = [range(4,9), [1,2]]
@@ -71,10 +79,11 @@ for i in range(2):
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
 
-num_generations = 50
-num_parents_mating = 5
-sol_per_pop = 20
+
 num_genes = len(gene_space)
+
+
+
 
 def load_MR_from_sol(solution):
     print(f"solution = {solution}")
@@ -125,6 +134,10 @@ def load_MR_from_sol(solution):
     
     return MR
 
+
+
+
+
 def fitness_func(ga_instance, solution, solution_idx):
     MR = load_MR_from_sol(solution)
     MR.simulate(max_time,delta_t,obst_wf)
@@ -137,6 +150,11 @@ def fitness_func(ga_instance, solution, solution_idx):
     print(f"FITNESS:::::: {fitness}")
     return fitness
 
+
+
+
+
+
 def run_ga():
     ga_instance = ga.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
@@ -144,9 +162,12 @@ def run_ga():
                     num_genes=num_genes,
                     gene_space=gene_space,
                     parent_selection_type='tournament',
-                    fitness_func=fitness_func)
+                    fitness_func=fitness_func,
+                    save_best_solutions=True)
 
     ga_instance.run()
+    return ga_instance
+
 
 if __name__ == "__main__":
     run_ga()
