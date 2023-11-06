@@ -88,25 +88,25 @@ num_genes = len(gene_space)
 
 
 def load_MR_from_sol(solution):
-    print(f"solution = {solution}")
+    # print(f"solution = {solution}")
     num_rotors = solution[0]
     num_depcams = solution[1]
     rotors = []
     dep_cams = []
     for i in range(int(num_rotors)):
         comb_num = int(solution[2+9*i])
-        print(f"comb_num = {comb_num}")
+        # print(f"comb_num = {comb_num}")
         m = motor_dict[comb_num]["mass"]
-        print(f"mass = {m}")
+        # print(f"mass = {m}")
         
         rot_vec = solution[3+9*i:6+9*i]
-        print(f"rotvec = {rot_vec}")
+        # print(f"rotvec = {rot_vec}")
         r = solution[6+9*i]
-        print(f"r = {r}")
+        # print(f"r = {r}")
         t_vec = solution[7+9*i:10+9*i]
-        print(f"t_vec= {t_vec}")
+        # print(f"t_vec= {t_vec}")
         t_vec = r*(t_vec/np.linalg.norm(t_vec)) #rescale
-        print(f"t_vecscaled = {t_vec}")
+        # print(f"t_vecscaled = {t_vec}")
         
         sigma = solution[10+9*i]
 
@@ -151,8 +151,10 @@ def load_MR_from_sol(solution):
 def fitness_func(ga_instance, solution, solution_idx):
     MR = load_MR_from_sol(solution)
     valid = MR.simulate(max_time,delta_t,obst_wf)
+    w_e = 1
+    w_A = 100
     if valid:
-        fitness = -np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d)
+        fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_A*(MR.Battery.maxAh-MR.Battery.currentAh)
         print(f"FITNESS:::::: {fitness}")
     
         if np.isnan(fitness):

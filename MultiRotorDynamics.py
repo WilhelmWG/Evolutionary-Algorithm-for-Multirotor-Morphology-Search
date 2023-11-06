@@ -176,7 +176,8 @@ class Battery():
         self.name = name
         # self.C = C
         # self.V = V
-    
+    def get_Ah(self):
+        return self.currentAh
     def update_Ah(self, A, delta_t):
         self.currentAh -= A*(delta_t/3600) #Ampere*hours
     
@@ -210,6 +211,8 @@ class Controller():
         self.k_v = k_v
         self.k_R = k_R
         self.k_omega = k_omega
+        self.fully_actuated = None
+        self.controllable = None
         self.allocation_matrix = self.calculate_allocation_matrix(rotors)
         self.TP = TrajectoryPlanner
         
@@ -308,7 +311,7 @@ class Controller():
         allocation_matrix = np.reshape(allocation_matrix,(4,n_r),'F')
         
         if (np.linalg.matrix_rank(allocation_matrix) < 4):
-            self.uncontrollable = True
+            self.controllable = False
             return None
         elif (np.linalg.matrix_rank(allocation_matrix_full) == 6):
             # print(6)
@@ -485,11 +488,13 @@ class MultiRotor:
         return depth_frames
 
     def simulate_timestep(self,delta_t,obst_wf):
-        
+        valid = True
         forces_bf = self.calculate_sum_of_forces_bf()
         # print(f"Forces in world frame: {self.R@forces_bf}")
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
+        if(self.t_vec[2] < 0):
+            valid = False
         # print(f"x = {self.t_vec}")
         self.R += self.R_dot*delta_t
 
@@ -511,6 +516,8 @@ class MultiRotor:
         self.set_rotor_forces(rotor_forces)
         self.update_A()
         self.Battery.update_Ah(self.A,delta_t)
+        if(self.Battery.get_Ah() < 0):
+            valid = False
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
@@ -518,12 +525,15 @@ class MultiRotor:
         self.depth_frames = self.get_depth_frames()
         
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
-        
+        return valid
+
     def simulate(self,max_time,delta_t,obst_wf):
-        if(self.maxTzi > 2*g*self.total_mass):
+        if(self.maxTzi > 2*g*self.total_mass and self.Controller.controllable != False):
             print(f"{self.maxTzi} > {2*g*self.total_mass}")
             for i in range(int(max_time/delta_t)):
-                self.simulate_timestep(delta_t,obst_wf)
+                valid = self.simulate_timestep(delta_t,obst_wf)
+                if not valid:
+                    return False
             return True
         else:
             return False

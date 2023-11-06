@@ -5,6 +5,8 @@ Add control gains to genotype
 Real trajectoryPlanning with dep_cams
 Add more tests for if a MR is really controllable (saves time)
 Parallelize computing
+Make the S'es correspond between motor and battery
+Make test for whether a fully actuated dynamics is truly well suited for fully actuated control
 
 Done:
 Visualize MR design (v)
