@@ -48,7 +48,7 @@ k_R = 8.81*0.1
 k_omega = 2.54*0.1
 
 #Trajectory
-x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
+x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 
 
@@ -59,12 +59,12 @@ def main():
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
 
     TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
-    
+    Battery = MRD.Battery(0.6,5,6,"big")
     #Normal Quadrotor rotors
-    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,3))
-    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,3))
-    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,3))
-    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,3))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,0))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,0))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,0))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,0))
     
     
     #Custom
@@ -86,7 +86,8 @@ def main():
                           rotors=rotors,
                           dep_cams = dep_cams,
                           IMU = IMU, 
-                          Controller = Controller)
+                          Controller = Controller,
+                          Battery = Battery)
     
     print(f"Quadrotor Inertial Tensor: \n{quad.calculate_inertial_tensor()}")
     print(f"Sum Of Forces Body Frame: {quad.calculate_sum_of_forces_bf()}")

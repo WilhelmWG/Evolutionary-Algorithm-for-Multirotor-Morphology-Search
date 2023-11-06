@@ -34,11 +34,14 @@ class Rotor(Limb):
         print(f"mass {self.m}")
         self.rps = rps #Rotations per second
         self.maxrps = motor_dict[motor_prop_comb_num]["RPS"][11]
+        self.lowrps = motor_dict[motor_prop_comb_num]["RPS"][1]
         self.sigma = sigma #which way the rotor rotates
         self.C_t = motor_dict[motor_prop_comb_num]["C_T"]
         self.C_q = self.C_t/10
 
         self.maxforce = self.C_t*self.maxrps**2
+
+        #probably faster to do this outside of class init
         self.lowrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["A"][:2], 1))
         self.lowrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["W"][:2], 1))
         self.highrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:],motor_dict[motor_prop_comb_num]["A"][1:], 2))
@@ -62,6 +65,12 @@ class Rotor(Limb):
     def get_rps(self):
         return self.rps
     
+    def get_A(self):
+        if self.rps < self.lowrps:
+            return self.lowrps_to_A(self.rps)
+        else:
+            return self.highrps_to_A(self.rps)
+
     def set_rps(self, rps):
         self.rps = np.clip(rps,-self.maxrps,self.maxrps)
 
@@ -125,8 +134,52 @@ class IMU(Limb):
 
 
 
+class DepthCamera(Limb):
+    def __init__(self,m,rot_vec,t_vec,AoV,K,res):
+        super().__init__(m,rot_vec,t_vec)
+        self.AoV = AoV # Radians [Horizontal, Vertical, Diagonal]
+        self.K = K #intrinsic matrix
+        self.res = res
+        self.depth_frame = np.zeros((res[0],res[1]))
+        
+    def project_point(self, point_lf):
+        u_hom = self.K@point_lf
+        
+        if point_lf[2] > 0:
+            infront = True
+        else: infront = False
+
+        u = np.array([u_hom[0]/u_hom[2],u_hom[1]/u_hom[2]])
+        u = np.round(u)
+        return u, infront
+
+    def set_depth_frame(self, obst_bf):
+        obst_lf = ut.coordinate_transformation(self.T,obst_bf)
+        depth_frame = np.zeros((self.res[0],self.res[1]))
+        for i in range(obst_lf.shape[1]):
+            u,infront = self.project_point(obst_lf[:3,i])
+            depth = np.linalg.norm(obst_lf[:3,i]) #Don't know if depth = euclid distance or simply Z
+            if (u[0] < self.res[0] and u[0] > 0) and (u[1] < self.res[1] and u[1] > 0) and infront:
+                depth_frame[int(u[0]),int(u[1])] = depth
+        self.depth_frame = depth_frame    
+
+    def get_depth_frame(self):
+        return self.depth_frame
 
 
+class Battery():
+    def __init__(self,m,Ah,S,name):
+        self.m = m
+        self.maxAh = Ah
+        self.currentAh = Ah
+        self.S = S
+        self.name = name
+        # self.C = C
+        # self.V = V
+    
+    def update_Ah(self, A, delta_t):
+        self.currentAh -= A*(delta_t/3600) #Ampere*hours
+    
 
 class TrajectoryPlanner():
     def __init__(self, delta_t, max_time, x_d_lambda,b1_d_lambda):
@@ -298,37 +351,7 @@ class Controller():
 
 
 
-class DepthCamera(Limb):
-    def __init__(self,m,rot_vec,t_vec,AoV,K,res):
-        super().__init__(m,rot_vec,t_vec)
-        self.AoV = AoV # Radians [Horizontal, Vertical, Diagonal]
-        self.K = K #intrinsic matrix
-        self.res = res
-        self.depth_frame = np.zeros((res[0],res[1]))
-        
-    def project_point(self, point_lf):
-        u_hom = self.K@point_lf
-        
-        if point_lf[2] > 0:
-            infront = True
-        else: infront = False
 
-        u = np.array([u_hom[0]/u_hom[2],u_hom[1]/u_hom[2]])
-        u = np.round(u)
-        return u, infront
-
-    def set_depth_frame(self, obst_bf):
-        obst_lf = ut.coordinate_transformation(self.T,obst_bf)
-        depth_frame = np.zeros((self.res[0],self.res[1]))
-        for i in range(obst_lf.shape[1]):
-            u,infront = self.project_point(obst_lf[:3,i])
-            depth = np.linalg.norm(obst_lf[:3,i]) #Don't know if depth = euclid distance or simply Z
-            if (u[0] < self.res[0] and u[0] > 0) and (u[1] < self.res[1] and u[1] > 0) and infront:
-                depth_frame[int(u[0]),int(u[1])] = depth
-        self.depth_frame = depth_frame    
-
-    def get_depth_frame(self):
-        return self.depth_frame
     
 
 
@@ -336,7 +359,7 @@ class DepthCamera(Limb):
 
 
 class MultiRotor:
-    def __init__(self, m,  rot_vec, t_vec, ang_vel, rotors: List[Rotor], dep_cams: List[DepthCamera], IMU: IMU, Controller: Controller):
+    def __init__(self, m,  rot_vec, t_vec, ang_vel, rotors: List[Rotor], dep_cams: List[DepthCamera], IMU: IMU, Controller: Controller, Battery: Battery):
         self.time = 0
         self.m = m
         
@@ -355,6 +378,8 @@ class MultiRotor:
         self.dep_cams = dep_cams
         self.IMU = IMU
         self.Controller = Controller
+        self.Battery = Battery
+        self.A = 0
         self.J = self.calculate_inertial_tensor()
         self.maxTzi = self.calculate_sum_of_Tzi()
 
@@ -369,6 +394,7 @@ class MultiRotor:
         m = 0
         m += self.m
         m += self.IMU.m
+        m += self.Battery.m
         for rotor in self.rotors:
             m += rotor.m
         for dep_cam in self.dep_cams:
@@ -445,6 +471,13 @@ class MultiRotor:
         for dep_cam in self.dep_cams:
             dep_cam.set_depth_frame(obst_bf)
     
+    def update_A(self):
+        A = 0
+        for rotor in self.rotors:
+            A += rotor.get_A()
+        self.A = A
+
+
     def get_depth_frames(self):
         depth_frames = []
         for dep_cam in self.dep_cams:
@@ -471,17 +504,19 @@ class MultiRotor:
         self.ang_vel_dot = np.linalg.solve(self.J,(-np.cross(self.ang_vel,self.J@self.ang_vel)+self.calculate_sum_of_torques_bf())) #1d)
         self.t_vec_dot += self.R@forces_bf*delta_t/self.total_mass #1b)
         self.R_dot = self.R@ut.skew(self.ang_vel) #1c)
-        
         self.time += delta_t
         
         #update values
         rotor_forces = self.Controller.get_rotor_forces(self.total_mass, self.J, self.time,self.R,self.ang_vel,self.t_vec,self.t_vec_dot)
         self.set_rotor_forces(rotor_forces)
+        self.update_A()
+        self.Battery.update_Ah(self.A,delta_t)
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
         self.set_depth_frames(obst_wf)
         self.depth_frames = self.get_depth_frames()
+        
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
         
     def simulate(self,max_time,delta_t,obst_wf):
@@ -489,6 +524,11 @@ class MultiRotor:
             print(f"{self.maxTzi} > {2*g*self.total_mass}")
             for i in range(int(max_time/delta_t)):
                 self.simulate_timestep(delta_t,obst_wf)
+            return True
+        else:
+            return False
+
+
 
 
 

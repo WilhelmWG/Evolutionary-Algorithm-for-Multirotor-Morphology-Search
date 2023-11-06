@@ -2,7 +2,7 @@ import numpy as np
 import pygad as ga
 import MultiRotorDynamics as MRD
 import plotting as plt
-from MotorRotorAnalysis import motor_dict
+from MotorRotorAnalysis import motor_dict, battery_dict
 
 
 g = 9.81
@@ -15,7 +15,7 @@ delta_t = 0.01 #seconds
 max_time = 20
 
 #Trajectory
-x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
+x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 
 m_IMU = 0.02
@@ -79,6 +79,8 @@ for i in range(2):
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
 
+gene_space.append(range(19))
+
 
 num_genes = len(gene_space)
 
@@ -119,18 +121,26 @@ def load_MR_from_sol(solution):
 
         dep_cam = MRD.DepthCamera(m_dep_cam,rot_vec,t_vec,AoV,K,res)
         dep_cams.append(dep_cam)
-        
+
+    battery_vals = battery_dict[int(solution[2+9*n_rotor_max+7*n_depcam_max])]
+    bat_m = battery_vals["mass"]
+    bat_Ah = battery_vals["Ah"]
+    bat_S = battery_vals["S"]
+    bat_name = battery_vals["name"]
+
+    Battery = MRD.Battery(bat_m,bat_Ah,bat_S,bat_name)
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
     TP = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
     Controller = MRD.Controller(k_x,k_v,k_R, k_omega, TP,rotors)
     MR = MRD.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),
-                          t_vec=np.array([0,0,0],dtype=float),
+                          t_vec=np.array([1,1,1],dtype=float),
                           ang_vel=np.array([0,0,0],dtype=float),
                           rotors=rotors,
                           dep_cams = dep_cams,
                           IMU = IMU, 
-                          Controller = Controller)
+                          Controller = Controller,
+                          Battery = Battery)
     
     return MR
 
@@ -140,14 +150,16 @@ def load_MR_from_sol(solution):
 
 def fitness_func(ga_instance, solution, solution_idx):
     MR = load_MR_from_sol(solution)
-    MR.simulate(max_time,delta_t,obst_wf)
-
-    fitness = -np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d)
-    print(f"FITNESS:::::: {fitness}")
+    valid = MR.simulate(max_time,delta_t,obst_wf)
+    if valid:
+        fitness = -np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d)
+        print(f"FITNESS:::::: {fitness}")
     
-    if np.isnan(fitness):
+        if np.isnan(fitness):
+            fitness = -10000000
+        print(f"FITNESS:::::: {fitness}")
+    else: 
         fitness = -10000000
-    print(f"FITNESS:::::: {fitness}")
     return fitness
 
 
