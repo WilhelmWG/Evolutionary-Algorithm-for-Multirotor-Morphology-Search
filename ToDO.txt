@@ -1,5 +1,5 @@
 ToDo:
-IMU State Estimation: Currently estimating rotation relative to world frame
+IMU State Estimation: Currently estimating rotation relative to world frame, but not position or velocity.
 Higher order RK-method
 Add control gains to genotype
 Real trajectoryPlanning with dep_cams

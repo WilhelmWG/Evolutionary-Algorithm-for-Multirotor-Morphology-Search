@@ -24,6 +24,7 @@ m_centroid = 0.122
 m_rotor = 0.0 #accounted for
 m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here
 d = 0.3
+max_angle = np.pi/4
 
 #IMU parameters
 k_a = 0.01
@@ -55,7 +56,7 @@ k_omega = 2.54*0.1
 
 num_generations = 20
 num_parents_mating = 1
-sol_per_pop = 50
+sol_per_pop = 20
 
 #[num_rotors, num_depcams]
 gene_space = [range(4,9), [1,2]]
@@ -65,7 +66,7 @@ n_depcam_max = 2
 for i in range(n_rotor_max):
     gene_space.append(range(20)) #ncomb
     for i in range(3):
-        gene_space.append({'low': -np.pi/8, 'high': np.pi/8}) #angles
+        gene_space.append({'low': -max_angle, 'high': max_angle}) #angles
     gene_space.append({'low': 0, 'high': d}) #absolute value of displacement
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
@@ -74,7 +75,7 @@ for i in range(n_rotor_max):
 #[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma],n_depmax[yaw,pitch,roll,r,x,y,z]]
 for i in range(2):
     for i in range(3):
-        gene_space.append({'low': -np.pi/8, 'high': np.pi/8})#angles
+        gene_space.append({'low': -max_angle, 'high': max_angle})#angles
     gene_space.append({'low': 0, 'high': d}) #radius
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
@@ -154,14 +155,14 @@ def fitness_func(ga_instance, solution, solution_idx):
     w_e = 1
     w_A = 100
     if valid:
-        fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_A*(MR.Battery.maxAh-MR.Battery.currentAh)
-        print(f"FITNESS:::::: {fitness}")
+        fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) + w_A*MR.Battery.currentAh/MR.Battery.maxAh
+        # print(f"FITNESS:::::: {fitness}")
     
         if np.isnan(fitness):
-            fitness = -10000000
+            fitness = -1
         print(f"FITNESS:::::: {fitness}")
     else: 
-        fitness = -10000000
+        fitness = -1
     return fitness
 
 
@@ -177,7 +178,8 @@ def run_ga():
                     gene_space=gene_space,
                     parent_selection_type='tournament',
                     fitness_func=fitness_func,
-                    save_best_solutions=True)
+                    save_best_solutions=True,
+                    parallel_processing=["process",10])
 
     ga_instance.run()
     return ga_instance

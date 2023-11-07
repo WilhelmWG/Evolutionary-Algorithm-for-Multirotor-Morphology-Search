@@ -31,7 +31,6 @@ class Rotor(Limb):
     def __init__(self, m, rot_vec, t_vec, rps, sigma, motor_prop_comb_num):
         super().__init__(m,rot_vec,t_vec)
         self.m += motor_dict[motor_prop_comb_num]["mass"]
-        print(f"mass {self.m}")
         self.rps = rps #Rotations per second
         self.maxrps = motor_dict[motor_prop_comb_num]["RPS"][11]
         self.lowrps = motor_dict[motor_prop_comb_num]["RPS"][1]
@@ -317,13 +316,13 @@ class Controller():
             # print(6)
             self.fully_actuated = True
             
-            print(allocation_matrix_full)
+            # print(allocation_matrix_full)
             return allocation_matrix_full
         else:
             # print(np.linalg.matrix_rank(allocation_matrix_full))
             self.fully_actuated = False
             
-            print(allocation_matrix) 
+            # print(allocation_matrix) 
             return allocation_matrix
 
     def force_allocation(self, f, M):
@@ -529,7 +528,7 @@ class MultiRotor:
 
     def simulate(self,max_time,delta_t,obst_wf):
         if(self.maxTzi > 2*g*self.total_mass and self.Controller.controllable != False):
-            print(f"{self.maxTzi} > {2*g*self.total_mass}")
+            # print(f"{self.maxTzi} > {2*g*self.total_mass}")
             for i in range(int(max_time/delta_t)):
                 valid = self.simulate_timestep(delta_t,obst_wf)
                 if not valid:
