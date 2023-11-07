@@ -24,7 +24,7 @@ m_centroid = 0.122
 m_rotor = 0.0 #accounted for
 m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here
 d = 0.3
-max_angle = np.pi/4
+max_angle = np.pi/2
 
 #IMU parameters
 k_a = 0.01
@@ -54,9 +54,9 @@ k_omega = 2.54*0.1
 # the initial population is created randomly based on the gene_space parameter.
 # Moreover, the mutation is applied based on this parameter.
 
-num_generations = 20
-num_parents_mating = 1
-sol_per_pop = 20
+num_generations = 50
+num_parents_mating = 10
+sol_per_pop = 50
 
 #[num_rotors, num_depcams]
 gene_space = [range(4,9), [1,2]]
@@ -171,6 +171,8 @@ def fitness_func(ga_instance, solution, solution_idx):
 
 
 def run_ga():
+
+    #Make your own mutation operator
     ga_instance = ga.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
                     sol_per_pop=sol_per_pop,
@@ -179,8 +181,9 @@ def run_ga():
                     parent_selection_type='tournament',
                     fitness_func=fitness_func,
                     save_best_solutions=True,
-                    parallel_processing=["process",10])
-
+                    crossover_type=None,
+                    parallel_processing=["process",8])
+    ga_instance.summary()
     ga_instance.run()
     return ga_instance
 
