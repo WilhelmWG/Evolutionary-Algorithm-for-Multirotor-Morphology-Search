@@ -60,7 +60,7 @@ k_omega_max = 5
 num_motor_comb = 20
 num_battery_types = 19
 num_generations = 200
-num_parents_mating = 4
+num_parents_mating = 15
 sol_per_pop = 100
 
 #[num_rotors, num_depcams]
@@ -178,9 +178,13 @@ def fitness_func(ga_instance, solution, solution_idx):
     
         if np.isnan(fitness):
             fitness = -1
-        print(f"FITNESS:::::: {fitness}")
+        else:
+            print(f"FITNESS:::::: {fitness}")
+        
     else: 
         fitness = -1
+    
+    
     return fitness
 
 
@@ -364,7 +368,9 @@ def run_ga():
                     save_best_solutions=True,
                     mutation_type=mutation_by_space_x,
                     crossover_type=None,
-                    parallel_processing=["process",10])
+                    parallel_processing=["process",10],
+                    keep_elitism=5,
+                    K_tournament=4)
     ga_instance.summary()
     ga_instance.run()
     return ga_instance
