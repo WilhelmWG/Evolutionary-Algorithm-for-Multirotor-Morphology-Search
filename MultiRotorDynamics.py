@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp
 import utils as ut
 import MotorRotorAnalysis as MRA
+import warnings
 
 from typing import List, Tuple
 from scipy.spatial.transform import Rotation as R
@@ -527,6 +528,8 @@ class MultiRotor:
         return valid
 
     def simulate(self,max_time,delta_t,obst_wf):
+        np.seterr(all="ignore")
+        warnings.filterwarnings('ignore')
         if(self.maxTzi > 2*g*self.total_mass and self.Controller.controllable != False):
             # print(f"{self.maxTzi} > {2*g*self.total_mass}")
             for i in range(int(max_time/delta_t)):

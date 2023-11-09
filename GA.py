@@ -2,7 +2,11 @@ import numpy as np
 import pygad as ga
 import MultiRotorDynamics as MRD
 import plotting as plt
+import random
+
 from MotorRotorAnalysis import motor_dict, battery_dict
+from pygad import utils as ut
+
 
 
 g = 9.81
@@ -42,10 +46,10 @@ K = np.array([[1200, 0, res[0]/2],
               [0,0,1]]) #Camera Intrinsics
 
 #controller parameters
-k_x = 16
-k_v = 5.6
-k_R = 8.81*0.1
-k_omega = 2.54*0.1
+k_x_max = 20
+k_v_max = 10
+k_R_max = 10
+k_omega_max = 5
 
 
 
@@ -53,10 +57,11 @@ k_omega = 2.54*0.1
 #If the user did not assign the initial population to the initial_population parameter,
 # the initial population is created randomly based on the gene_space parameter.
 # Moreover, the mutation is applied based on this parameter.
-
-num_generations = 50
-num_parents_mating = 10
-sol_per_pop = 50
+num_motor_comb = 20
+num_battery_types = 19
+num_generations = 200
+num_parents_mating = 4
+sol_per_pop = 100
 
 #[num_rotors, num_depcams]
 gene_space = [range(4,9), [1,2]]
@@ -64,7 +69,7 @@ n_rotor_max = 8
 n_depcam_max = 2
 #[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma]]
 for i in range(n_rotor_max):
-    gene_space.append(range(20)) #ncomb
+    gene_space.append(range(num_motor_comb)) #ncomb
     for i in range(3):
         gene_space.append({'low': -max_angle, 'high': max_angle}) #angles
     gene_space.append({'low': 0, 'high': d}) #absolute value of displacement
@@ -80,7 +85,13 @@ for i in range(2):
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
 
-gene_space.append(range(19))
+gene_space.append(range(num_battery_types))
+
+
+gene_space.append({'low': 0, 'high': k_x_max})
+gene_space.append({'low': 0, 'high': k_v_max})
+gene_space.append({'low': 0, 'high': k_R_max})
+gene_space.append({'low': 0, 'high': k_omega_max})
 
 
 num_genes = len(gene_space)
@@ -129,6 +140,13 @@ def load_MR_from_sol(solution):
     bat_S = battery_vals["S"]
     bat_name = battery_vals["name"]
 
+    k_x = solution[2+9*n_rotor_max+7*n_depcam_max+1]
+    k_v = solution[2+9*n_rotor_max+7*n_depcam_max+2]
+    k_R = solution[2+9*n_rotor_max+7*n_depcam_max+3]
+    k_omega = solution[2+9*n_rotor_max+7*n_depcam_max+4]
+
+    # print(f"k_x {k_x}, k_v {k_v}, k_R {k_R}, k_omega {k_omega}")
+
     Battery = MRD.Battery(bat_m,bat_Ah,bat_S,bat_name)
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
     TP = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
@@ -166,8 +184,171 @@ def fitness_func(ga_instance, solution, solution_idx):
     return fitness
 
 
+def available_motor_combs(S):
+    motors = []
+    for i in range(num_motor_comb):
+        motor_S = motor_dict[i]["S"]
+        if S in motor_S:
+            motors.append(i)
+    return motors
+
+def motor_comb_idxs():
+    idxs = []
+    for i in range(n_rotor_max):
+        idxs.append(2+9*i)
+    return idxs
 
 
+
+def mutation_by_space_x(offspring,ga_instance):
+
+    """
+    Applies the random mutation using the mutation values' space.
+    It accepts a single parameter:
+        -offspring: The offspring to mutate.
+    It returns an array of the mutated offspring using the mutation space.
+    """
+
+    # For each offspring, a value from the gene space is selected randomly and assigned to the selected mutated gene.
+    for offspring_idx in range(offspring.shape[0]):
+        mutation_indices = np.array(random.sample(range(0, ga_instance.num_genes), ga_instance.mutation_num_genes))
+        if ga_instance.generations_completed == 0:
+            mutation_indices = np.append(mutation_indices, 2+9*n_rotor_max+7*n_depcam_max)
+        # print(mutation_indices)
+        for gene_idx in mutation_indices:
+
+            if type(ga_instance.random_mutation_min_val) in ga_instance.supported_int_float_types:
+                range_min = ga_instance.random_mutation_min_val
+                range_max = ga_instance.random_mutation_max_val
+            else:
+                range_min = ga_instance.random_mutation_min_val[gene_idx]
+                range_max = ga_instance.random_mutation_max_val[gene_idx]
+
+            if ga_instance.gene_space_nested:
+                # Returning the current gene space from the 'gene_space' attribute.
+                if type(ga_instance.gene_space[gene_idx]) in [np.ndarray, list]:
+                    curr_gene_space = ga_instance.gene_space[gene_idx].copy()
+                else:
+                    curr_gene_space = ga_instance.gene_space[gene_idx]
+
+                # If the gene space has only a single value, use it as the new gene value.
+                if type(curr_gene_space) in ga.GA.supported_int_float_types:
+                    value_from_space = curr_gene_space
+                # If the gene space is None, apply mutation by adding a random value between the range defined by the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
+                elif curr_gene_space is None:
+                    rand_val = np.random.uniform(low=range_min,
+                                                    high=range_max,
+                                                    size=1)[0]
+                    if ga_instance.mutation_by_replacement:
+                        value_from_space = rand_val
+                    else:
+                        value_from_space = offspring[offspring_idx, gene_idx] + rand_val
+                elif type(curr_gene_space) is dict:
+                    # The gene's space of type dict specifies the lower and upper limits of a gene.
+                    if 'step' in curr_gene_space.keys():
+                        # The np.random.choice() and np.random.uniform() functions return a np array as the output even if the array has a single value.
+                        # We have to return the output at index 0 to force a numeric value to be returned not an object of type np.ndarray. 
+                        # If np.ndarray is returned, then it will cause an issue later while using the set() function.
+                        value_from_space = np.random.choice(np.arange(start=curr_gene_space['low'],
+                                                                            stop=curr_gene_space['high'],
+                                                                            step=curr_gene_space['step']),
+                                                                size=1)[0]
+                    else:
+                        value_from_space = np.random.uniform(low=curr_gene_space['low'],
+                                                                high=curr_gene_space['high'],
+                                                                size=1)[0]
+                else:
+                    # Selecting a value randomly based on the current gene's space in the 'gene_space' attribute.
+                    # If the gene space has only 1 value, then select it. The old and new values of the gene are identical.
+                    if len(curr_gene_space) == 1:
+                        value_from_space = curr_gene_space[0]
+                    # If the gene space has more than 1 value, then select a new one that is different from the current value.
+                    else:
+                        values_to_select_from = list(set(curr_gene_space) - set([offspring[offspring_idx, gene_idx]]))
+
+                        if len(values_to_select_from) == 0:
+                            value_from_space = offspring[offspring_idx, gene_idx]
+                        else:
+                            value_from_space = random.choice(values_to_select_from)
+                        
+                        #if motor
+                        if gene_idx in motor_comb_idxs():
+                            # print("checking motor")
+                            battery = offspring[offspring_idx][2+9*n_rotor_max+7*n_depcam_max]
+                            S = battery_dict[int(battery)]["S"]
+                            if not (value_from_space in available_motor_combs(S)):
+                                value_from_space = offspring[offspring_idx, gene_idx]
+                                # print("Invalid change")
+                        
+                        #if battery
+                        if gene_idx == 2+9*n_rotor_max+7*n_depcam_max: 
+                            # print("changing battery")
+                            S = battery_dict[int(value_from_space)]["S"]
+                            motors = available_motor_combs(S)
+                            for i in range(n_rotor_max):
+                                comb_num = int(offspring[offspring_idx][2+9*i])
+                                if not (comb_num in motors):
+                                    offspring[offspring_idx][2+9*i] = random.choice(motors)
+                                    # print(f"changed from motor {comb_num} to {offspring[offspring_idx][2+9*i]}")
+                            
+
+            else:
+                # Selecting a value randomly from the global gene space in the 'gene_space' attribute.
+                if type(ga_instance.gene_space) is dict:
+                    # When the gene_space is assigned a dict object, then it specifies the lower and upper limits of all genes in the space.
+                    if 'step' in ga_instance.gene_space.keys():
+                        value_from_space = np.random.choice(np.arange(start=ga_instance.gene_space['low'],
+                                                                            stop=ga_instance.gene_space['high'],
+                                                                            step=ga_instance.gene_space['step']),
+                                                                size=1)[0]
+                    else:
+                        value_from_space = np.random.uniform(low=ga_instance.gene_space['low'],
+                                                                high=ga_instance.gene_space['high'],
+                                                                size=1)[0]
+                else:
+                    # If the space type is not of type dict, then a value is randomly selected from the gene_space attribute.
+                    values_to_select_from = list(set(ga_instance.gene_space) - set([offspring[offspring_idx, gene_idx]]))
+
+                    if len(values_to_select_from) == 0:
+                        value_from_space = offspring[offspring_idx, gene_idx]
+                    else:
+                        value_from_space = random.choice(values_to_select_from)
+
+                        
+
+                # value_from_space = random.choice(ga_instance.gene_space)
+
+            if value_from_space is None:
+                # TODO: Return index 0.
+                # TODO: Check if this if statement is necessary.
+                value_from_space = np.random.uniform(low=range_min, 
+                                                        high=range_max, 
+                                                        size=1)[0]
+
+            # Assinging the selected value from the space to the gene.
+            if ga_instance.gene_type_single == True:
+                if not ga_instance.gene_type[1] is None:
+                    offspring[offspring_idx, gene_idx] = np.round(ga_instance.gene_type[0](value_from_space),
+                                                                        ga_instance.gene_type[1])
+                else:
+                    offspring[offspring_idx, gene_idx] = ga_instance.gene_type[0](value_from_space)
+                
+            else:
+                if not ga_instance.gene_type[gene_idx][1] is None:
+                    offspring[offspring_idx, gene_idx] = np.round(ga_instance.gene_type[gene_idx][0](value_from_space),
+                                                                        ga_instance.gene_type[gene_idx][1])
+
+                else:
+                    offspring[offspring_idx, gene_idx] = ga_instance.gene_type[gene_idx][0](value_from_space)
+            
+            if ga_instance.allow_duplicate_genes == False:
+                offspring[offspring_idx], _, _ = ga_instance.solve_duplicate_genes_by_space(solution=offspring[offspring_idx],
+                                                                                        gene_type=ga_instance.gene_type,
+                                                                                        num_trials=10)
+            
+
+
+    return offspring
 
 
 def run_ga():
@@ -181,8 +362,9 @@ def run_ga():
                     parent_selection_type='tournament',
                     fitness_func=fitness_func,
                     save_best_solutions=True,
+                    mutation_type=mutation_by_space_x,
                     crossover_type=None,
-                    parallel_processing=["process",8])
+                    parallel_processing=["process",10])
     ga_instance.summary()
     ga_instance.run()
     return ga_instance
