@@ -58,7 +58,7 @@ k_omega_max = 5
 # the initial population is created randomly based on the gene_space parameter.
 # Moreover, the mutation is applied based on this parameter.
 num_motor_comb = 20
-num_battery_types = 19
+num_battery_types = 16
 num_generations = 200
 num_parents_mating = 15
 sol_per_pop = 100
@@ -174,11 +174,13 @@ def fitness_func(ga_instance, solution, solution_idx):
     w_A = 100
     if valid:
         fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) + w_A*MR.Battery.currentAh/MR.Battery.maxAh
+        
         # print(f"FITNESS:::::: {fitness}")
     
         if np.isnan(fitness):
             fitness = -1
         else:
+            print(f"Battery left: {MR.Battery.currentAh/MR.Battery.maxAh}")
             print(f"FITNESS:::::: {fitness}")
         
     else: 

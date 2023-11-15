@@ -98,28 +98,29 @@ battery_dict = {0  : {"mass" : 0.220,       "Ah" : 1.55, "S" : 4,   "name": "Tat
                 1  : {"mass" : 0.374,       "Ah" : 4   , "S" : 4,   "name": "Spektrum 4s"                               }, 
                 2  : {"mass" : 0.285,       "Ah" : 4   , "S" : 3,   "name": "Spektrum 3s"                               }, 
                 3  : {"mass" : 0.536,       "Ah" : 4   , "S" : 5,   "name": "Turnigy 5S"                                }, 
-                4  : {"mass" : 0.435,       "Ah" : 4   , "S" : 5,   "name": "Roarning Top"                              }, 
-                5  : {"mass" : 0.395,       "Ah" : 5   , "S" : 4,   "name": "Spektrum 4s 5A"                            }, 
-                6  : {"mass" : 0.3903,      "Ah" : 6   , "S" : 4,   "name": "Auline Lilon"                              }, 
-                7  : {"mass" : 0.2005,      "Ah" : 3   , "S" : 4,   "name": "4s 3000mAh - 18650 - Auline Li-Ion XT60"   }, 
-                8  : {"mass" : 0.196,       "Ah" : 1.2 , "S" : 6,   "name": "Tattu 6s 1200"                             }, 
-                9  : {"mass" : 0.180,       "Ah" : 2.2 , "S" : 4,   "name": "Tattu 4s 2200"                             }, 
-                10 : {"mass" : 0.24125,     "Ah" : 1.55, "S" : 5,   "name": "Tattu 5s 1550"                             }, 
-                11 : {"mass" : 0.231,       "Ah" : 2.3 , "S" : 4,   "name": "Tattu 4s 2300"                             }, 
-                12 : {"mass" : 0.436,       "Ah" : 5   , "S" : 4,   "name": "Gens Ace 4s 5A"                            }, 
-                13 : {"mass" : 0.650,       "Ah" : 5   , "S" : 5,   "name": "Auline 6s 5A"                              }, 
-                14 : {"mass" : 0.702,       "Ah" : 5   , "S" : 6,   "name": "Tattu 6S 5000mAh"                          }, 
-                15 : {"mass" : 0.723,       "Ah" : 5   , "S" : 6,   "name": "6s 5000mAh -100C - Spektrum LiPo IC5"      }, 
-                16 : {"mass" : 0.695,       "Ah" : 5   , "S" : 6,   "name": "6s 5000mAh - 45C - Gens Ace EC5"           }, 
-                17 : {"mass" : 0.758,       "Ah" : 6.2 , "S" : 6,   "name": "GNB 6200mAh 6S 90C LiPo Battery (XT90)"    },
-                18 : {"mass" : 0.200,       "Ah" : 5   , "S" : 4,   "name": "DIY 21700 4s"                              },  
+                4  : {"mass" : 0.395,       "Ah" : 5   , "S" : 4,   "name": "Spektrum 4s 5A"                            }, 
+                5  : {"mass" : 0.3903,      "Ah" : 6   , "S" : 4,   "name": "Auline Lilon"                              }, 
+                6  : {"mass" : 0.2005,      "Ah" : 3   , "S" : 4,   "name": "4s 3000mAh - 18650 - Auline Li-Ion XT60"   }, 
+                7  : {"mass" : 0.196,       "Ah" : 1.2 , "S" : 6,   "name": "Tattu 6s 1200"                             }, 
+                8  : {"mass" : 0.180,       "Ah" : 2.2 , "S" : 4,   "name": "Tattu 4s 2200"                             }, 
+                9  : {"mass" : 0.24125,     "Ah" : 1.55, "S" : 5,   "name": "Tattu 5s 1550"                             }, 
+                10 : {"mass" : 0.231,       "Ah" : 2.3 , "S" : 4,   "name": "Tattu 4s 2300"                             }, 
+                11 : {"mass" : 0.436,       "Ah" : 5   , "S" : 4,   "name": "Gens Ace 4s 5A"                            }, 
+                12 : {"mass" : 0.650,       "Ah" : 5   , "S" : 5,   "name": "Auline 6s 5A"                              }, 
+                13 : {"mass" : 0.702,       "Ah" : 5   , "S" : 6,   "name": "Tattu 6S 5000mAh"                          }, 
+                14 : {"mass" : 0.723,       "Ah" : 5   , "S" : 6,   "name": "6s 5000mAh -100C - Spektrum LiPo IC5"      }, 
+                15 : {"mass" : 0.695,       "Ah" : 5   , "S" : 6,   "name": "6s 5000mAh - 45C - Gens Ace EC5"           },  
                 }
 
 def main():
-    plt.scatter(motor_dict[12]["RPM"][1:],motor_dict[12]["A"][1:])
-    model = np.poly1d(np.polyfit(motor_dict[12]["RPM"][1:],motor_dict[12]["A"][1:], 2))
-    polyline = np.linspace(0,40000,100)
+    plt.scatter(motor_dict[16]["RPM"][1:],motor_dict[16]["W"][1:])
+    model = np.poly1d(np.polyfit(motor_dict[16]["RPM"][1:],motor_dict[16]["W"][1:], 4))
+    polyline = np.linspace(5000,22000,100)
     plt.plot(polyline,model(polyline))
+    plt.title("Power as a function of RPM")
+    plt.xlabel("RPM")
+    plt.ylabel("Power [W]")
+    plt.grid()
     plt.show()
 
 if __name__ == "__main__":

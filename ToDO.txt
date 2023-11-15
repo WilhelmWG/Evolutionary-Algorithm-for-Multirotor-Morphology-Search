@@ -5,7 +5,7 @@ Add control gains to genotype
 Real trajectoryPlanning with dep_cams
 Add more tests for if a MR is really controllable (saves time)
 Make test for whether a fully actuated dynamics is truly well suited for fully actuated control
-
+ADD BATTERY SOURCSE TO BIBTEX
 Done:
 Add more tests for if a MR is really controllable (saves time) (v)
 Parallelize computing (v)

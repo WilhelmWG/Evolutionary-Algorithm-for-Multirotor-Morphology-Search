@@ -42,10 +42,10 @@ class Rotor(Limb):
         self.maxforce = self.C_t*self.maxrps**2
 
         #probably faster to do this outside of class init
-        self.lowrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["A"][:2], 1))
-        self.lowrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2],motor_dict[motor_prop_comb_num]["W"][:2], 1))
-        self.highrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:],motor_dict[motor_prop_comb_num]["A"][1:], 2))
-        self.highrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:],motor_dict[motor_prop_comb_num]["W"][1:], 2))
+        self.lowrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2]/60,motor_dict[motor_prop_comb_num]["A"][:2], 1))
+        self.lowrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2]/60,motor_dict[motor_prop_comb_num]["W"][:2], 1))
+        self.highrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:]/60,motor_dict[motor_prop_comb_num]["A"][1:], 2))
+        self.highrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:]/60,motor_dict[motor_prop_comb_num]["W"][1:], 2))
     
     #returns the force in body frame
     def get_force_bf(self):
@@ -66,10 +66,14 @@ class Rotor(Limb):
         return self.rps
     
     def get_A(self):
-        if self.rps < self.lowrps:
-            return self.lowrps_to_A(self.rps)
+        # print(self.rps)
+        rps = np.abs(self.rps)
+        if rps < self.lowrps:
+            # print(f"A {self.lowrps_to_A(rps)}")
+            return self.lowrps_to_A(rps)
         else:
-            return self.highrps_to_A(self.rps)
+            # print(f"A {self.highrps_to_A(rps)}")
+            return self.highrps_to_A(rps)
 
     def set_rps(self, rps):
         self.rps = np.clip(rps,-self.maxrps,self.maxrps)
