@@ -8,7 +8,10 @@ Ensure valid init (batt mot prop)
 Why 4th order no workie?
 ADD BATTERY SOURCSE TO BIBTEX
 ADD THE MISMATCH IN ORIENTATION TO THE FITNESS FUNCTION 
-FITNESS WITH BATTERY TIME > FITNESS WITH POWER CONSUMPTION because power will result in the smallest possible MAVs
+
+Make more optimal controller for fully actuated MAV:
+- calculate rxy^2 from control allocation matrix
+- Calculate optimal b3_d from b3_r and b3' using bisection
 
 
 Done:
@@ -26,7 +29,7 @@ Controller
 - Figure out if reversed b3 axis makes a difference (v)
 - Positive sigma + positive rps = positive force (v)
 - F IS OPPOSITE FROM PAPER BUT b3d DEFINED THE SAME AND I THINK I*VE ROTATED THE MATRIX CORRECTLY; SO THIS IS WEIRD (v)
-
+FITNESS WITH BATTERY TIME > FITNESS WITH POWER CONSUMPTION because power will result in the smallest possible MAVs
 Finish quad.get_depth_frame(obst) (v)
 torque from gravity (Not necessary as long as multirotor is symmetrical about center of mass) (v)
 

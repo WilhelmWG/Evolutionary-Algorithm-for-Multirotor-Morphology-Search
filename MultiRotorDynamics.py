@@ -255,9 +255,15 @@ class Controller():
         
         
         #Calculate ang_vel
-        delta_R_d = R_d-self.TP.prev_R_d
-        R_d_dot = delta_R_d/delta_t
-        ang_vel_d = ut.unskew(R_d.T@R_d_dot)
+        
+        delta_R_d = self.TP.prev_R_d.T@R_d
+        q = R.from_matrix(delta_R_d).as_quat()
+        axis = q[0:3]/np.linalg.norm(q[0:3])
+        angle = 2*np.arccos(q[3])
+        ang_vel_d = angle*axis/delta_t
+        # delta_R_d = R_d-self.TP.prev_R_d
+        # R_d_dot = delta_R_d/delta_t
+        # ang_vel_d = ut.unskew(R_d.T@R_d_dot)
         delta_ang_vel_d = ang_vel_d-self.TP.prev_ang_vel_d
         self.TP.ang_vel_dot_d = delta_ang_vel_d/self.TP.delta_t
 
