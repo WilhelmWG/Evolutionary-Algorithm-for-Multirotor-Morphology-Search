@@ -19,8 +19,10 @@ delta_t = 0.01 #seconds
 max_time = 20
 
 #Trajectory
-x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+# x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])##
+# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+x_d = lambda t : np.array([0*t+1,1*t+1,1*t+1])
+b1_d = lambda t : np.array([1*t,0*t,0*t])
 
 m_IMU = 0.02
 m_dep_cam = 0.03
@@ -58,7 +60,7 @@ k_omega_max = 5
 # the initial population is created randomly based on the gene_space parameter.
 # Moreover, the mutation is applied based on this parameter.
 num_motor_comb = 20
-num_battery_types = 16
+num_battery_types = 14
 num_generations = 200
 num_parents_mating = 15
 sol_per_pop = 100
