@@ -52,34 +52,28 @@ class Rotor(Limb):
         force_rf = self.C_t*self.rps**2*np.array([0,0,1])*np.sign(self.rps)*self.sigma
         force_rf = np.reshape(force_rf,(3,1))
         force_bf = self.R@force_rf
-        # print(f"force_bf : {force_bf}")
         return force_bf
     
     def get_Tzi(self):
         force_rf = self.C_t*self.maxrps**2*np.array([0,0,1])
         force_rf = np.reshape(force_rf,(3,1))
         force_bf = self.R@force_rf
-        # print(f"force_bf : {force_bf}")
         return np.array([0,0,1])@force_bf
 
     def get_rps(self):
         return self.rps
     
     def get_A(self):
-        # print(self.rps)
         rps = np.abs(self.rps)
         if rps < self.lowrps:
-            # print(f"A {self.lowrps_to_A(rps)}")
             return self.lowrps_to_A(rps)
         else:
-            # print(f"A {self.highrps_to_A(rps)}")
             return self.highrps_to_A(rps)
 
     def set_rps(self, rps):
         self.rps = np.clip(rps,-self.maxrps,self.maxrps)
 
     def force_to_rps(self, force):
-        # print(np.sqrt(np.abs(force)/self.C_t)*np.sign(force)*self.sigma)
         return np.sqrt(np.abs(force)/self.C_t)*np.sign(force)*self.sigma
 
     def set_force(self, force):
@@ -227,13 +221,6 @@ class Controller():
     
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
-        # R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
-        # R_x2 = R.from_euler("zxy",np.array([0,np.pi/2,0])).as_matrix()
-        # R_y = R.from_euler("zxy",np.array([0,0,-np.pi/2])).as_matrix()
-        # R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
-        # # print(R_mat)
-        # R_mat = (R_mat)
-        # R_mat = R_mat.T
 
         delta_t = self.TP.delta_t
         e3 = np.array([0,0,1],dtype = float)
@@ -255,15 +242,11 @@ class Controller():
         
         
         #Calculate ang_vel
-        
         delta_R_d = self.TP.prev_R_d.T@R_d
         q = R.from_matrix(delta_R_d).as_quat()
         axis = q[0:3]/np.linalg.norm(q[0:3])
         angle = 2*np.arccos(q[3])
         ang_vel_d = angle*axis/delta_t
-        # delta_R_d = R_d-self.TP.prev_R_d
-        # R_d_dot = delta_R_d/delta_t
-        # ang_vel_d = ut.unskew(R_d.T@R_d_dot)
         delta_ang_vel_d = ang_vel_d-self.TP.prev_ang_vel_d
         self.TP.ang_vel_dot_d = delta_ang_vel_d/self.TP.delta_t
 
@@ -275,27 +258,14 @@ class Controller():
         #update previous with current
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
-         # e_omega too big, makes no sense
-        # print(R_d)
-        # print(R_mat)
-        # print(f"errors: {e_x, e_v, e_R, e_omega}\n")
         return e_x, e_v, e_R, e_omega
         
       
     def calculate_forces(self,m,e_x,e_v,e_R, e_omega, R_mat, ang_vel, J):
-        # R_x = R.from_euler("zxy",np.array([0,np.pi,0])).as_matrix()
-        # R_y = R.from_euler("zxy",np.array([0,0,np.pi])).as_matrix()
-        # R_z = R.from_euler("zxy",np.array([np.pi/2,0,0])).as_matrix()
-        # R_mat = (R_x@R_mat@R_x.T).T # This is because paper uses R as rotation from body frame to inertial frame as opposed to my implementation
-        # R_mat = R_mat.T
-        # R_mat = (R_mat)
         R_d = self.TP.prev_R_d
         e3 = np.array([0,0,1],dtype = float)
         x_dot_dot_d = self.traj[2]
         
-        # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d))
-        # print(R_mat@e3 )
-        # print((-self.k_x*e_x-self.k_v*e_v+m*g*e3+m*x_dot_dot_d)@R_mat@e3 )
         f = (-m*self.k_x*e_x-m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d) #Added m to k_x and k_v
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
         
@@ -313,9 +283,7 @@ class Controller():
             theta = (ut.skew(rotor.t_vec)+rotor.C_q/rotor.C_t*rotor.sigma*np.eye(3))@gamma
 
             allocation_matrix_full = np.append(allocation_matrix_full,np.insert(theta,0,gamma))
-            # print(allocation_matrix_full)
             allocation_matrix = np.append(allocation_matrix,np.insert(theta,0,gamma_proj))
-            # print(allocation_matrix)
 
         allocation_matrix_full = np.reshape(allocation_matrix_full,(6,n_r),'F')
         allocation_matrix = np.reshape(allocation_matrix,(4,n_r),'F')
@@ -324,24 +292,15 @@ class Controller():
             self.controllable = False
             return None
         elif (np.linalg.matrix_rank(allocation_matrix_full) == 6):
-            # print(6)
             self.fully_actuated = True
-            
-            # print(allocation_matrix_full)
             return allocation_matrix_full
         else:
-            # print(np.linalg.matrix_rank(allocation_matrix_full))
             self.fully_actuated = False
-            
-            # print(allocation_matrix) 
             return allocation_matrix
 
     def force_allocation(self, f, M):
         forces = np.insert(M,0,f)
-        # print(forces)
-        # print(np.linalg.pinv(self.allocation_matrix))
         rotor_forces = np.linalg.pinv(self.allocation_matrix)@forces #allocation_matrix@[f1,f2,f3,f4] = [f,M] solves for f1,f2,f3,f4
-        # print(f"[f,M] : {forces}")
         return rotor_forces
 
     def get_rotor_forces(self,m,J,time,R_mat,ang_vel,t_vec,t_vec_dot):
@@ -354,8 +313,6 @@ class Controller():
             f = f@R_mat@e3
         
         rotor_forces = self.force_allocation(f, M)
-        
-        # print(f"rotor_forces : {rotor_forces}")
         return rotor_forces
 
 
