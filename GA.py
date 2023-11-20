@@ -23,6 +23,7 @@ max_time = 20
 # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 x_d = lambda t : np.array([0*t+1,1*t+1,1*t+1])
 b1_d = lambda t : np.array([1*t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t])
 
 m_IMU = 0.02
 m_dep_cam = 0.03
@@ -151,7 +152,7 @@ def load_MR_from_sol(solution):
 
     Battery = MRD.Battery(bat_m,bat_Ah,bat_S,bat_name)
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
-    TP = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d)
+    TP = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d,b3_d)
     Controller = MRD.Controller(k_x,k_v,k_R, k_omega, TP,rotors)
     MR = MRD.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),

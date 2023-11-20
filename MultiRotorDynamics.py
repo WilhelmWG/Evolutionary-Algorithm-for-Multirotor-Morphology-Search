@@ -181,7 +181,7 @@ class Battery():
     
 
 class TrajectoryPlanner():
-    def __init__(self, delta_t, max_time, x_d_lambda,b1_d_lambda):
+    def __init__(self, delta_t, max_time, x_d_lambda,b1_d_lambda,b3_d_lambda):
         self.delta_t = delta_t
         self.max_time = max_time
         self.t = np.linspace(0,max_time,int(max_time/delta_t)+1) 
@@ -189,6 +189,7 @@ class TrajectoryPlanner():
         self.x_dot_d = derivative(x_d_lambda,self.t,dx=1e-6)
         self.x_dot_dot_d = derivative(x_d_lambda,self.t,dx=1e-6,n=2)
         self.b1_d = b1_d_lambda(self.t)
+        self.b3_d = b3_d_lambda(self.t)
 
         self.prev_R_d = np.eye(3)
         self.prev_ang_vel_d = np.zeros((3,))
@@ -196,7 +197,7 @@ class TrajectoryPlanner():
 
         
     def get_trajectory(self,time):
-        return self.x_d[:,int(time/self.delta_t)],self.x_dot_d[:,int(time/self.delta_t)],self.x_dot_dot_d[:,int(time/self.delta_t)], self.b1_d[:,int(time/self.delta_t)]
+        return self.x_d[:,int(time/self.delta_t)],self.x_dot_d[:,int(time/self.delta_t)],self.x_dot_dot_d[:,int(time/self.delta_t)], self.b1_d[:,int(time/self.delta_t)], self.b3_d[:,int(time/self.delta_t)]
 
 
 
@@ -211,14 +212,30 @@ class Controller():
         self.k_omega = k_omega
         self.fully_actuated = None
         self.controllable = None
+        self.rxy = 0
         self.allocation_matrix = self.calculate_allocation_matrix(rotors)
+        
         self.TP = TrajectoryPlanner
         
     
     def update_trajectory(self,time):
-        x_d, x_dot_d, x_dot_dot_d, b1_d = self.TP.get_trajectory(time)
-        self.traj = [x_d, x_dot_d, x_dot_dot_d, b1_d]
+        x_d, x_dot_d, x_dot_dot_d, b1_d, b3_d = self.TP.get_trajectory(time)
+        self.traj = [x_d, x_dot_d, x_dot_dot_d, b1_d, b3_d]
     
+    def get_b3d(self, b3r, fr, n):
+        rxy = self.rxy
+        cross = np.cross(b3r,fr)
+        k = cross/np.linalg.norm(cross)
+        theta_max = np.arcsin(np.linalg.norm(k))
+        theta = theta_max/2
+        for i in range(n):
+            
+            if fr@(b3r*np.cos(theta)-cross*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta))) >= np.sqrt(np.linalg.norm(fr)**2-rxy**2):
+                theta = theta-1/2*theta_max/(2**i)
+            else:
+                theta = theta + 1/2*theta_max/(2**i)
+        b3d = b3r*np.cos(theta)-cross*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta))
+        return b3d
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
 
@@ -226,16 +243,17 @@ class Controller():
         e3 = np.array([0,0,1],dtype = float)
         
         self.update_trajectory(time)
-        x_d, x_dot_d, x_dot_dot_d, b1_d = self.traj
+        x_d, x_dot_d, x_dot_dot_d, b1_r, b3_r = self.traj
 
         #Positional errors
         e_x = t_vec - x_d
         e_v = t_vec_dot - x_dot_d
 
         #Calculate R_d
-        ctrl = -self.k_x*e_x - self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        b3_d = ctrl/np.linalg.norm(ctrl)
-        cross31 = np.cross(b3_d,b1_d)
+        fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
+        # b3_d = ctrl/np.linalg.norm(ctrl)
+        b3_d = self.get_b3d(b3_r,fr,100)
+        cross31 = np.cross(b3_d,b1_r)
         b2_d = cross31/np.linalg.norm(cross31)
         b1_d_new = np.cross(b2_d,b3_d)
         R_d = np.array([b1_d_new,b2_d,b3_d]).T
@@ -293,10 +311,15 @@ class Controller():
             return None
         elif (np.linalg.matrix_rank(allocation_matrix_full) == 6):
             self.fully_actuated = True
+            force_vectors_xy = allocation_matrix_full[:2,:]*[rotor.maxforce for rotor in rotors]
+            self.rxy = np.sqrt(np.sum(np.abs(force_vectors_xy[0]))**2+np.sum(np.abs(force_vectors_xy[1]))**2)
+
             return allocation_matrix_full
         else:
             self.fully_actuated = False
             return allocation_matrix
+    
+        
 
     def force_allocation(self, f, M):
         forces = np.insert(M,0,f)
@@ -305,13 +328,19 @@ class Controller():
 
     def get_rotor_forces(self,m,J,time,R_mat,ang_vel,t_vec,t_vec_dot):
         e_x, e_v, e_R, e_omega = self.calculate_errors(m,time,R_mat,ang_vel,t_vec,t_vec_dot)
+        e1 = np.array([1,0,0],dtype = float)
+        e2 = np.array([0,1,0],dtype = float)
         e3 = np.array([0,0,1],dtype = float)
         
         f, M = self.calculate_forces(m,e_x,e_v, e_R, e_omega, R_mat, ang_vel, J)
         
-        if not self.fully_actuated:
+        if self.fully_actuated:
+            f_xy = (f@R_mat@e1)*e1+(f@R_mat@e2)*e2
+            if np.linalg.norm(f_xy)>self.rxy:
+                f_xy = f_xy*np.linalg.norm(f_xy)*self.rxy
+            f = f_xy+(f@R_mat@e3)*e3
+        else:
             f = f@R_mat@e3
-        
         rotor_forces = self.force_allocation(f, M)
         return rotor_forces
 
