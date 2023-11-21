@@ -226,7 +226,9 @@ class Controller():
         rxy = self.rxy
         cross = np.cross(b3r,fr)
         k = cross/np.linalg.norm(cross)
-        theta_max = np.arcsin(np.linalg.norm(k))
+        theta_max = np.pi/2#np.arcsin(np.linalg.norm(k))#
+        print(theta_max)
+        print(k)
         theta = theta_max/2
         for i in range(n):
             
@@ -251,8 +253,9 @@ class Controller():
 
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        # b3_d = ctrl/np.linalg.norm(ctrl)
+        # b3_d = fr/np.linalg.norm(fr)
         b3_d = self.get_b3d(b3_r,fr,100)
+        b3_d = b3_d / np.linalg.norm(b3_d)
         cross31 = np.cross(b3_d,b1_r)
         b2_d = cross31/np.linalg.norm(cross31)
         b1_d_new = np.cross(b2_d,b3_d)

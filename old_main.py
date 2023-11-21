@@ -49,8 +49,9 @@ k_omega = 2.54*0.1
 
 #Trajectory
 x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t])
+# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 
 
 def main():
@@ -81,7 +82,7 @@ def main():
     
     quad = MRD.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),
-                          t_vec=np.array([0,-1,-1],dtype=float),
+                          t_vec=np.array([1,1,1],dtype=float),
                           ang_vel=np.array([0,0,0],dtype=float),
                           rotors=rotors,
                           dep_cams = dep_cams,
