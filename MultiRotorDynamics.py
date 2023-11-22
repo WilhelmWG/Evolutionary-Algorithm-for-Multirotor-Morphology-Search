@@ -229,14 +229,17 @@ class Controller():
         k = cross/np.linalg.norm(cross)
         theta_max = np.pi/2#np.arcsin(np.linalg.norm(k))#
         theta = theta_max/2
+        
         for i in range(1,n+1):
-            b3d = (b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k*b3r)*(1-np.cos(theta)))
-            if fr@b3d >= np.sqrt(np.linalg.norm(fr)**2-rxy**2):
-                theta = theta+1/2*theta_max/(2**i)
-            else:
+            b3d = (b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta)))
+
+            if fr@b3d >= np.sqrt(max(0,np.linalg.norm(fr)**2-rxy**2)):
+
                 theta = theta - 1/2*theta_max/(2**i)
+            else:
+                theta = theta + 1/2*theta_max/(2**i)
         print(theta)
-        b3d = b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k*b3r)*(1-np.cos(theta))
+        b3d = b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta))
         return b3d
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
@@ -253,11 +256,11 @@ class Controller():
 
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        
+        print(f"fr {fr}")
         b3_d = fr/np.linalg.norm(fr)
-        print(b3_d)
-        b3_d = self.get_b3d(b3_r,fr,10)
-        print(b3_d)
+        print(f"normalized fr {b3_d}")
+        b3_d = self.get_b3d(b3_r,fr,16)
+        print(f"b3_d : { b3_d}")
         
         
         cross31 = np.cross(b3_d,b1_r)
@@ -346,8 +349,10 @@ class Controller():
             if np.linalg.norm(f_xy)>self.rxy:
                 f_xy = f_xy*np.linalg.norm(f_xy)*self.rxy
             f = f_xy+(f@R_mat@e3)*e3
+            print(f"f {f}")
         else:
             f = f@R_mat@e3
+            # print(f"f {f}")
         rotor_forces = self.force_allocation(f, M)
         return rotor_forces
 
