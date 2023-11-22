@@ -224,19 +224,19 @@ class Controller():
     
     def get_b3d(self, b3r, fr, n):
         rxy = self.rxy
+        print(rxy)
         cross = np.cross(b3r,fr)
         k = cross/np.linalg.norm(cross)
         theta_max = np.pi/2#np.arcsin(np.linalg.norm(k))#
-        print(theta_max)
-        print(k)
         theta = theta_max/2
-        for i in range(n):
-            
-            if fr@(b3r*np.cos(theta)-cross*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta))) >= np.sqrt(np.linalg.norm(fr)**2-rxy**2):
-                theta = theta-1/2*theta_max/(2**i)
+        for i in range(1,n+1):
+            b3d = (b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k*b3r)*(1-np.cos(theta)))
+            if fr@b3d >= np.sqrt(np.linalg.norm(fr)**2-rxy**2):
+                theta = theta+1/2*theta_max/(2**i)
             else:
-                theta = theta + 1/2*theta_max/(2**i)
-        b3d = b3r*np.cos(theta)-cross*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta))
+                theta = theta - 1/2*theta_max/(2**i)
+        print(theta)
+        b3d = b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k*b3r)*(1-np.cos(theta))
         return b3d
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
@@ -253,9 +253,13 @@ class Controller():
 
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        # b3_d = fr/np.linalg.norm(fr)
-        b3_d = self.get_b3d(b3_r,fr,100)
-        b3_d = b3_d / np.linalg.norm(b3_d)
+        
+        b3_d = fr/np.linalg.norm(fr)
+        print(b3_d)
+        b3_d = self.get_b3d(b3_r,fr,10)
+        print(b3_d)
+        
+        
         cross31 = np.cross(b3_d,b1_r)
         b2_d = cross31/np.linalg.norm(cross31)
         b1_d_new = np.cross(b2_d,b3_d)
