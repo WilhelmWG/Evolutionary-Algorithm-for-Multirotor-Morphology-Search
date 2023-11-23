@@ -347,7 +347,7 @@ class Controller():
         if self.fully_actuated:
             f_xy = (f@R_mat@e1)*e1+(f@R_mat@e2)*e2
             if np.linalg.norm(f_xy)>self.rxy:
-                f_xy = f_xy*np.linalg.norm(f_xy)*self.rxy
+                f_xy = f_xy/np.linalg.norm(f_xy)*self.rxy
             f = f_xy+(f@R_mat@e3)*e3
             print(f"f {f}")
         else:

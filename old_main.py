@@ -51,7 +51,7 @@ k_omega = 2.54*0.1
 x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 # 
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-# b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 
 
@@ -67,8 +67,8 @@ def main():
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,0))
-    rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/2,0],dtype=float),np.array([+d/np.sqrt(2),-d/np.sqrt(2),-0.25],dtype=float),20,1,16))
-    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/2],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/32,0],dtype=float),np.array([+d/np.sqrt(2),-d/np.sqrt(2),-0.25],dtype=float),20,1,16))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/32],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
     
     #Custom
     # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,-np.pi/32],dtype=float),np.array([d,0,0],dtype=float),20,-1,16))
