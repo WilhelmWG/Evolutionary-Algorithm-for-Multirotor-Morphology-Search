@@ -184,7 +184,7 @@ class TrajectoryPlanner():
     def __init__(self, delta_t, max_time, x_d_lambda,b1_d_lambda,b3_d_lambda):
         self.delta_t = delta_t
         self.max_time = max_time
-        self.t = np.linspace(0,max_time,int(max_time/delta_t)+1) 
+        self.t = np.linspace(delta_t,max_time+delta_t,int(max_time/delta_t)+1) 
         self.x_d = x_d_lambda(self.t)
         self.x_dot_d = derivative(x_d_lambda,self.t,dx=1e-6)
         self.x_dot_dot_d = derivative(x_d_lambda,self.t,dx=1e-6,n=2)
@@ -226,10 +226,11 @@ class Controller():
         rxy = self.rxy
         if fr@b3r >= np.sqrt(max(0,np.linalg.norm(fr)**2-rxy**2)):
             return b3r
-        print(rxy)
+        # print(f"rxy : {rxy}")
         cross = np.cross(b3r,fr)
         k = cross/np.linalg.norm(cross)
-        theta_max = np.pi/2#np.arcsin(np.linalg.norm(k))#
+        theta_max = np.arcsin(np.linalg.norm(cross)/(np.linalg.norm(b3r)*np.linalg.norm(fr)))#np.pi/2#
+        # print(f"theta_max = {theta_max}")
         theta = theta_max/2
         
         for i in range(1,n+1):
@@ -240,7 +241,7 @@ class Controller():
                 theta = theta - 1/2*theta_max/(2**i)
             else:
                 theta = theta + 1/2*theta_max/(2**i)
-        print(theta)
+        # print(theta)
         b3d = b3r*np.cos(theta)+np.cross(k,b3r)*np.sin(theta)+k*(k@b3r)*(1-np.cos(theta))
         return b3d
 
@@ -258,20 +259,15 @@ class Controller():
 
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        print(f"fr {fr}")
-        print(np.linalg.norm(fr))
         b3_d = fr/np.linalg.norm(fr)
-        print(f"normalized fr {b3_d}")
         b3_d = self.get_b3d(b3_r,fr,16)
-        print(f"b3_d : { b3_d}")
         
         
         cross31 = np.cross(b3_d,b1_r)
         b2_d = cross31/np.linalg.norm(cross31)
         b1_d_new = np.cross(b2_d,b3_d)
         R_d = np.array([b1_d_new,b2_d,b3_d]).T
-        print(R_mat)
-        print(R_d)
+
         
         
         #Calculate ang_vel
@@ -295,7 +291,6 @@ class Controller():
         #update previous with current
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
-        print(f"e_R: {e_R}")
         return e_x, e_v, e_R, e_omega
         
       
@@ -306,7 +301,7 @@ class Controller():
         
         f = (-m*self.k_x*e_x-m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d) #Added m to k_x and k_v
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
-        print(f"MD = {M}")
+        # print(f"MD = {M}")
         return f, M
     
     def calculate_allocation_matrix(self, rotors):
@@ -332,8 +327,8 @@ class Controller():
         elif (np.linalg.matrix_rank(allocation_matrix_full) == 6):
             self.fully_actuated = True
             force_vectors_xy = allocation_matrix_full[:2,:]*[rotor.maxforce for rotor in rotors]
-            self.rxy = np.sqrt(np.sum(np.abs(force_vectors_xy[0]))**2+np.sum(np.abs(force_vectors_xy[1]))**2)
-
+            # self.rxy = np.sqrt(np.sum(np.abs(force_vectors_xy[0]))**2+np.sum(np.abs(force_vectors_xy[1]))**2)
+            self.rxy = np.sqrt(np.min(np.array([np.sum(np.abs(force_vectors_xy[0])**2),np.sum(np.abs(force_vectors_xy[1])**2)])))/2
             return allocation_matrix_full
         else:
             self.fully_actuated = False
@@ -359,11 +354,8 @@ class Controller():
             if np.linalg.norm(f_xy)>self.rxy:
                 f_xy = f_xy/np.linalg.norm(f_xy)*self.rxy
             f = (f@R_mat@e3)*e3 + f_xy
-            print(f"f {f}")
-            print(np.linalg.norm(f))
         else:
             f = f@R_mat@e3
-            print(f"f {f}")
         rotor_forces = self.force_allocation(f, M)
         return rotor_forces
 
@@ -407,6 +399,7 @@ class MultiRotor:
 
         self.t_vec_history = np.reshape(t_vec,(3,1))
         self.rot_vec_history = np.reshape(rot_vec,(3,1))
+        self.rot_err_history = np.array([])
 
         self.total_mass = self.calculate_total_mass()
         
@@ -472,7 +465,7 @@ class MultiRotor:
         return sum_torque
     
     def calculate_sum_of_torques_bf(self):
-        print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
+        # print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()#+self.calculate_torque_from_gravity_bf()
 
     def calculate_sum_of_Tzi(self):
@@ -540,6 +533,8 @@ class MultiRotor:
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
+        Psi = 1/2*(np.eye(3)-self.Controller.TP.prev_R_d.T@self.R)
+        self.rot_err_history = np.append(self.rot_err_history,Psi)
         self.set_depth_frames(obst_wf)
         self.depth_frames = self.get_depth_frames()
         
@@ -555,6 +550,7 @@ class MultiRotor:
                 valid = self.simulate_timestep(delta_t,obst_wf)
                 if not valid:
                     return False
+            
             return True
         else:
             return False

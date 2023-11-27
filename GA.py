@@ -22,8 +22,8 @@ max_time = 20
 # x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])##
 # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 x_d = lambda t : np.array([0*t+1,1*t+1,1*t+1])
-b1_d = lambda t : np.array([1*t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 
 m_IMU = 0.02
 m_dep_cam = 0.03
@@ -173,10 +173,11 @@ def load_MR_from_sol(solution):
 def fitness_func(ga_instance, solution, solution_idx):
     MR = load_MR_from_sol(solution)
     valid = MR.simulate(max_time,delta_t,obst_wf)
-    w_e = 1
+    w_t = 1
+    w_r = 1 
     w_A = 100
     if valid:
-        fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d)**2 + w_A*MR.Battery.currentAh/MR.Battery.maxAh
+        fitness = -w_t*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_r*np.linalg.norm(MR.rot_err_history)+ w_A*MR.Battery.currentAh/MR.Battery.maxAh
         
         # print(f"FITNESS:::::: {fitness}")
     

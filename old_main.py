@@ -35,7 +35,7 @@ magnet_bias = np.array([0,0,0],dtype=float)
 
 #Simulation parameters
 delta_t = 0.01 #seconds
-max_time = 20.2
+max_time = 20.6
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
@@ -53,7 +53,7 @@ x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])
 # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 # b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 
 
 def main():
@@ -72,10 +72,10 @@ def main():
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/8],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
     
     #Custom
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,-np.pi/32],dtype=float),np.array([d,0,0],dtype=float),20,-1,16))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/32,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,16))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/32],dtype=float),np.array([-d,0,0],dtype=float),20,-1,16))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,-np.pi/32,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,16))
+    # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,-np.pi/8],dtype=float),np.array([d,0,0],dtype=float),20,-1,16))
+    # rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/8,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,16))
+    # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/8],dtype=float),np.array([-d,0,0],dtype=float),20,-1,16))
+    # rotors.append(MRD.Rotor(m_rotor,np.array([0,-np.pi/8,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,16))
     # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/3],dtype=float),np.array([d/np.sqrt(2),d/np.sqrt(2),0],dtype=float),20,-1,16))
     # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d/np.sqrt(2),-d/np.sqrt(2),0],dtype=float),-20,1,16))
     # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/2],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
@@ -104,7 +104,8 @@ def main():
         print(f"{quad.maxTzi} > {2*g*quad.total_mass}")
         for i in range(int(max_time/delta_t)):
             quad.simulate_timestep(delta_t,obst_wf)
-        
+        print(quad.rot_err_history)
+        print(quad.rot_err_history.shape)
     
     # print(quad.t_vec_history)
     # print(quad.rot_vec_history)
