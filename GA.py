@@ -63,7 +63,7 @@ k_omega_max = 5
 num_motor_comb = 20
 num_battery_types = 14
 num_generations = 200
-num_parents_mating = 15
+num_parents_mating = 25
 sol_per_pop = 100
 
 #[num_rotors, num_depcams]
@@ -176,7 +176,7 @@ def fitness_func(ga_instance, solution, solution_idx):
     w_e = 1
     w_A = 100
     if valid:
-        fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) + w_A*MR.Battery.currentAh/MR.Battery.maxAh
+        fitness = -w_e*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d)**2 + w_A*MR.Battery.currentAh/MR.Battery.maxAh
         
         # print(f"FITNESS:::::: {fitness}")
     
@@ -361,8 +361,6 @@ def mutation_by_space_x(offspring,ga_instance):
 
 
 def run_ga():
-
-    #Make your own mutation operator
     ga_instance = ga.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
                     sol_per_pop=sol_per_pop,
@@ -372,6 +370,7 @@ def run_ga():
                     fitness_func=fitness_func,
                     save_best_solutions=True,
                     mutation_type=mutation_by_space_x,
+                    mutation_num_genes=4,
                     crossover_type=None,
                     parallel_processing=["process",10],
                     keep_elitism=5,

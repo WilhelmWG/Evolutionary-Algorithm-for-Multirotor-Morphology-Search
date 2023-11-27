@@ -15,8 +15,8 @@ from scipy.misc import derivative
 
 
 g = 9.81
-limb_cross_section_cm = 4**2 #4^2cm^2
-carbon_foam_core_density = 0.0000105
+limb_cross_section_cm = 4**2-4 #4^2cm^2-2x2
+carbon_foam_core_density = 0.0000105 
 kg_per_cm = limb_cross_section_cm*carbon_foam_core_density
 motor_dict = MRA.motor_dict
 
