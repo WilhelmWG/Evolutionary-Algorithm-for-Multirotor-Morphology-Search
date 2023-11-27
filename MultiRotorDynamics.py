@@ -224,6 +224,8 @@ class Controller():
     
     def get_b3d(self, b3r, fr, n):
         rxy = self.rxy
+        if fr@b3r >= np.sqrt(max(0,np.linalg.norm(fr)**2-rxy**2)):
+            return b3r
         print(rxy)
         cross = np.cross(b3r,fr)
         k = cross/np.linalg.norm(cross)
@@ -257,6 +259,7 @@ class Controller():
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
         print(f"fr {fr}")
+        print(np.linalg.norm(fr))
         b3_d = fr/np.linalg.norm(fr)
         print(f"normalized fr {b3_d}")
         b3_d = self.get_b3d(b3_r,fr,16)
@@ -267,13 +270,19 @@ class Controller():
         b2_d = cross31/np.linalg.norm(cross31)
         b1_d_new = np.cross(b2_d,b3_d)
         R_d = np.array([b1_d_new,b2_d,b3_d]).T
+        print(R_mat)
+        print(R_d)
         
         
         #Calculate ang_vel
         delta_R_d = self.TP.prev_R_d.T@R_d
         q = R.from_matrix(delta_R_d).as_quat()
-        axis = q[0:3]/np.linalg.norm(q[0:3])
-        angle = 2*np.arccos(q[3])
+        if not np.linalg.norm(q[0:3]) == 0:
+            axis = q[0:3]/np.linalg.norm(q[0:3])
+            angle = 2*np.arccos(q[3])
+        else:
+            axis = np.zeros((3,))
+            angle = 0
         ang_vel_d = angle*axis/delta_t
         delta_ang_vel_d = ang_vel_d-self.TP.prev_ang_vel_d
         self.TP.ang_vel_dot_d = delta_ang_vel_d/self.TP.delta_t
@@ -286,6 +295,7 @@ class Controller():
         #update previous with current
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
+        print(f"e_R: {e_R}")
         return e_x, e_v, e_R, e_omega
         
       
@@ -296,7 +306,7 @@ class Controller():
         
         f = (-m*self.k_x*e_x-m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d) #Added m to k_x and k_v
         M = -self.k_R*e_R-self.k_omega*e_omega+ut.skew(ang_vel)@J@ang_vel-J@(ut.skew(ang_vel)@R_mat.T@R_d@self.TP.prev_ang_vel_d-R_mat.T@R_d@self.TP.ang_vel_dot_d)
-        
+        print(f"MD = {M}")
         return f, M
     
     def calculate_allocation_matrix(self, rotors):
@@ -348,11 +358,12 @@ class Controller():
             f_xy = (f@R_mat@e1)*e1+(f@R_mat@e2)*e2
             if np.linalg.norm(f_xy)>self.rxy:
                 f_xy = f_xy/np.linalg.norm(f_xy)*self.rxy
-            f = f_xy+(f@R_mat@e3)*e3
+            f = (f@R_mat@e3)*e3 + f_xy
             print(f"f {f}")
+            print(np.linalg.norm(f))
         else:
             f = f@R_mat@e3
-            # print(f"f {f}")
+            print(f"f {f}")
         rotor_forces = self.force_allocation(f, M)
         return rotor_forces
 
@@ -461,7 +472,7 @@ class MultiRotor:
         return sum_torque
     
     def calculate_sum_of_torques_bf(self):
-        # print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
+        print(f"M_real: {self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()}")
         return self.calculate_reaction_torque_bf()+self.calculate_torque_from_thrust_bf()#+self.calculate_torque_from_gravity_bf()
 
     def calculate_sum_of_Tzi(self):
