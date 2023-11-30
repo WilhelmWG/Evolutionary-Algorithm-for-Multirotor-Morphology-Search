@@ -27,7 +27,7 @@ b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 
 m_IMU = 0.02
 m_dep_cam = 0.03
-m_centroid = 0.122
+m_centroid = 0.148
 m_rotor = 0.0 #accounted for
 m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here
 d = 0.3
@@ -62,9 +62,9 @@ k_omega_max = 5
 # Moreover, the mutation is applied based on this parameter.
 num_motor_comb = 20
 num_battery_types = 14
-num_generations = 200
+num_generations = 100
 num_parents_mating = 25
-sol_per_pop = 100
+sol_per_pop = 200
 
 #[num_rotors, num_depcams]
 gene_space = [range(4,9), [1,2]]
@@ -81,7 +81,7 @@ for i in range(n_rotor_max):
     gene_space.append([-1,1]) #sigma
 
 #[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma],n_depmax[yaw,pitch,roll,r,x,y,z]]
-for i in range(2):
+for i in range(n_depcam_max):
     for i in range(3):
         gene_space.append({'low': -max_angle, 'high': max_angle})#angles
     gene_space.append({'low': 0, 'high': d}) #radius
@@ -375,7 +375,8 @@ def run_ga():
                     crossover_type=None,
                     parallel_processing=["process",10],
                     keep_elitism=5,
-                    K_tournament=4)
+                    K_tournament=4,
+                    stop_criteria=["reach_95", "saturate_15"])
     ga_instance.summary()
     ga_instance.run()
     return ga_instance

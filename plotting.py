@@ -3,7 +3,7 @@ import numpy as np
 import GA as ga
 import MultiRotorDynamics as MRD
 from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Line3D, Patch3D, Poly3DCollection
+from mpl_toolkits.mplot3d.art3d import Line3D, Patch3D, Poly3DCollection, Text3D
 
 
 
@@ -96,6 +96,8 @@ def plot_MR_design(MR: MRD.MultiRotor):
         ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e1*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e1*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e1*frame_scale],color='r')) #x
         ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e2*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e2*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e2*frame_scale],color='r')) #y
         ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e3*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e3*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e3*frame_scale],color='g')) #z
+
+        ax.text(x=t_vec[0],y=t_vec[0],z=t_vec[0], s="text")
     plt.show()
 
 

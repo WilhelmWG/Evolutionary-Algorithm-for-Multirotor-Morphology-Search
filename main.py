@@ -17,7 +17,7 @@ def main():
     ga_instance.plot_fitness()
     ga_instance.plot_genes(graph_type = "boxplot",solutions="best")
     ga_instance.plot_genes(graph_type = "histogram",solutions="best")
-    MR = ga.load_MR_from_sol(best_sol[ga.num_generations])
+    MR = ga.load_MR_from_sol(best_sol[ga_instance.generations_completed])
     plt.plot_MR_design(MR)
     # plt.plot_attitude(MR.rot_vec_history, MR.IMU.rot_vec_est_history, ga.delta_t)
     # plt.plot_position_2d(MR.t_vec_history,ga.delta_t)
