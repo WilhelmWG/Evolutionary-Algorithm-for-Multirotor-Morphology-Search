@@ -3,18 +3,21 @@ IMU State Estimation: Currently estimating rotation relative to world frame, but
 Higher order RK-method (Make simulate_timestep return the derivatives of all values instead of actually changing them, still need some method for updating the values idk)
 Real trajectoryPlanning with dep_cams
 Add more tests for if a MR is really controllable (saves time)
-Make test for whether a fully actuated dynamics is truly well suited for fully actuated control
 Ensure valid init (batt mot prop)
 Why 4th order no workie?
-ADD BATTERY SOURCSE TO BIBTEX
-ADD THE MISMATCH IN ORIENTATION TO THE FITNESS FUNCTION 
 
-Make more optimal controller for fully actuated MAV:
-- calculate rxy^2 from control allocation matrix
-- Calculate optimal b3_d from b3_r and b3' using bisection
+
+
+
 
 
 Done:
+Make more optimal controller for fully actuated MAV:
+- calculate rxy^2 from control allocation matrix
+- Calculate optimal b3_d from b3_r and b3' using bisection
+Make test for whether a fully actuated dynamics is truly well suited for fully actuated control
+ADD THE MISMATCH IN ORIENTATION TO THE FITNESS FUNCTION 
+ADD BATTERY SOURCSE TO BIBTEX
 Add more tests for if a MR is really controllable (saves time) (v)
 Parallelize computing (v)
 Make the S'es correspond between motor and battery (v)
@@ -31,6 +34,5 @@ Controller
 - F IS OPPOSITE FROM PAPER BUT b3d DEFINED THE SAME AND I THINK I*VE ROTATED THE MATRIX CORRECTLY; SO THIS IS WEIRD (v)
 FITNESS WITH BATTERY TIME > FITNESS WITH POWER CONSUMPTION because power will result in the smallest possible MAVs
 Finish quad.get_depth_frame(obst) (v)
-torque from gravity (Not necessary as long as multirotor is symmetrical about center of mass) (v)
 
 

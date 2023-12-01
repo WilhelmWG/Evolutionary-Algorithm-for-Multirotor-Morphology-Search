@@ -84,7 +84,6 @@ def plot_MR_design(MR: MRD.MultiRotor):
     e3 = np.array([0,0,1])
 
     rotors = MR.rotors
-    center = np.array([0,0,0])
     frame_scale = 0.04
     for rotor in rotors:
         t_vec = rotor.t_vec
@@ -97,7 +96,24 @@ def plot_MR_design(MR: MRD.MultiRotor):
         ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e2*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e2*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e2*frame_scale],color='r')) #y
         ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e3*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e3*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e3*frame_scale],color='g')) #z
 
-        ax.text(x=t_vec[0],y=t_vec[0],z=t_vec[0], s="text")
+        ax.text(x=t_vec[0],y=t_vec[1],z=t_vec[2], s=rotor.name)
+    
+    frame_scale = 0.03
+    #Makes a Cube at centroid representing the battery
+    ax.add_line(Line3D([-frame_scale,frame_scale],[frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,frame_scale] ,[-frame_scale,-frame_scale],[frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,frame_scale] ,[frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,frame_scale] ,[-frame_scale,-frame_scale],[-frame_scale,-frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,frame_scale] ,[frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([frame_scale,frame_scale]  ,[-frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([frame_scale,frame_scale],[-frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
+    ax.add_line(Line3D([frame_scale,frame_scale],[frame_scale,frame_scale],[-frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,-frame_scale],[frame_scale,frame_scale],[-frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([frame_scale,frame_scale],[-frame_scale,-frame_scale],[-frame_scale,frame_scale],color="r"))
+    ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,-frame_scale],[-frame_scale,frame_scale],color="r"))
+    ax.text(x=0,y=0,z=0, s=MR.Battery.name)
     plt.show()
 
 

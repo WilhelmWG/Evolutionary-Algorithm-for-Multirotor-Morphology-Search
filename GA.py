@@ -8,7 +8,6 @@ from MotorRotorAnalysis import motor_dict, battery_dict
 from pygad import utils as ut
 
 
-
 g = 9.81
 #simulation parameters
 obst_wf = np.ones((3,3))*2
@@ -376,7 +375,9 @@ def run_ga():
                     parallel_processing=["process",10],
                     keep_elitism=5,
                     K_tournament=4,
-                    stop_criteria=["reach_95", "saturate_15"])
+                    stop_criteria=["reach_95", "saturate_15"],
+                    random_seed = 123)
+                    
     ga_instance.summary()
     ga_instance.run()
     return ga_instance

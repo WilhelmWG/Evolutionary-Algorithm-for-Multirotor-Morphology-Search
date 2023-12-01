@@ -46,7 +46,7 @@ class Rotor(Limb):
         self.lowrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][:2]/60,motor_dict[motor_prop_comb_num]["W"][:2], 1))
         self.highrps_to_A = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:]/60,motor_dict[motor_prop_comb_num]["A"][1:], 2))
         self.highrps_to_W = np.poly1d(np.polyfit(motor_dict[motor_prop_comb_num]["RPM"][1:]/60,motor_dict[motor_prop_comb_num]["W"][1:], 2))
-    
+        self.name = motor_dict[motor_prop_comb_num]["name"]
     #returns the force in body frame
     def get_force_bf(self):
         force_rf = self.C_t*self.rps**2*np.array([0,0,1])*np.sign(self.rps)*self.sigma

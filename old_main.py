@@ -47,13 +47,44 @@ k_v = 5.6*m_total
 k_R = 8.81*0.1
 k_omega = 2.54*0.1
 
-#Trajectory
-x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
-# 
-# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# # b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+#Trajectory1 z+
+x_d = lambda t : np.array([0*t+1,0*t+1,1*t+1])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
+#UPRIGHT TRAJ
+#Trajectory1 z-
+x_d = lambda t : np.array([0*t+1,0*t+1,-1*t+1])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
+#Trajectory2 y+z+
+x_d = lambda t : np.array([0*t+1,1*t+1,1*t+1])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
+#Trajectory3 x+z+
+x_d = lambda t : np.array([1*t+1,0*t+1,1*t+1])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+
+#Trajectory2 y+z-
+x_d = lambda t : np.array([0*t+1,1*t+1,-1*t+1])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
+#Trajectory3 x+z-
+x_d = lambda t : np.array([1*t+1,0*t+1,-1*t+1])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
+#Swivvle TRAJ
+#TrajectoryLast
+x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])# x_d = lambda t : np.array([0*t,1*t,1*t])#
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
 
 
 def main():
