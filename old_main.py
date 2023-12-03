@@ -47,71 +47,105 @@ k_v = 5.6*m_total
 k_R = 8.81*0.1
 k_omega = 2.54*0.1
 x_ds = []
+b1_ds = []
+b3_ds = []
 
 #Trajectory1 z+
 x_d = lambda t : np.array([0*t,0*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #UPRIGHT TRAJ
 #Trajectory1 z-
 x_d = lambda t : np.array([0*t,0*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory2 y+z+
 x_d = lambda t : np.array([0*t,1*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory3 x+z+
 x_d = lambda t : np.array([1*t,0*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory4 y+z-
 x_d = lambda t : np.array([0*t,1*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory5 x+z-
 x_d = lambda t : np.array([1*t,0*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory2 y+z+
 x_d = lambda t : np.array([0*t,1*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory3 x+z+
 x_d = lambda t : np.array([1*t,0*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 #Trajectory4 y+z-
 x_d = lambda t : np.array([0*t,1*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory5 x+z-
 x_d = lambda t : np.array([1*t,0*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 #Trajectory5 x+y+z-
 x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 #Trajectory5 x+y+z-
 x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 
 #TrajectoryLast
@@ -119,34 +153,46 @@ x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d 
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 #TrajectoryLast
 x_d = lambda t : np.array([0.4*np.sin(np.pi*t),0.4*t,0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 #Swivvle TRAJ
 x_d = lambda t : np.array([0.5*np.cos(np.pi*t),1*t,0*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 x_d = lambda t : np.array([1*t,0.5*np.cos(np.pi*t),0*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Swivvle + Rotation
 x_d = lambda t : np.array([0.5*np.cos(np.pi*t),1*t,0*t])
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 x_d = lambda t : np.array([1*t,0.5*np.cos(np.pi*t),0*t])
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
-
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 
 
@@ -156,7 +202,7 @@ def main():
     dep_cams = []
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
 
-    TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d,b3_d)
+    TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_ds,b1_ds,b3_ds)
     Battery = MRD.Battery(0.6,5,6,"big")
     #Normal Quadrotor rotors
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,0))
