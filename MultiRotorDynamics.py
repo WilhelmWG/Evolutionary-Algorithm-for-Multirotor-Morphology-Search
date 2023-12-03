@@ -498,6 +498,16 @@ class MultiRotor:
         for dep_cam in self.dep_cams:
             depth_frames.append(dep_cam.depth_frame)
         return depth_frames
+    
+    def reset_state(self):
+        self.t_vec = np.zeros((3,))
+        self.T = ut.transformation_matrix(self.R,self.t_vec)
+        # self.rot_vec = np.zeros((3,))
+        # self.R = np.eye(3)
+
+    def load_new_trajectory(self,delta_t, max_time, x_d, b_1d, b_3d):
+        self.TP = TrajectoryPlanner(delta_t,max_time,x_d,b_1d,b_3d)
+
 
     def simulate_timestep(self,delta_t,obst_wf):
         valid = True
@@ -505,7 +515,9 @@ class MultiRotor:
         # print(f"Forces in world frame: {self.R@forces_bf}")
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
-        if(self.t_vec[2] < 0):
+        # if(self.t_vec[2] < 0):
+        #     valid = False
+        if(np.linalg.norm(self.t_vec - self.Controller.TP.x_d[:,int(self.time/delta_t)]) > 1) :
             valid = False
         # print(f"x = {self.t_vec}")
         self.R += self.R_dot*delta_t
@@ -528,22 +540,21 @@ class MultiRotor:
         self.set_rotor_forces(rotor_forces)
         self.update_A()
         self.Battery.update_Ah(self.A,delta_t)
-        if(self.Battery.get_Ah() < 0):
-            valid = False
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
         Psi = 1/2*(np.eye(3)-self.Controller.TP.prev_R_d.T@self.R)
         self.rot_err_history = np.append(self.rot_err_history,Psi)
-        self.set_depth_frames(obst_wf)
-        self.depth_frames = self.get_depth_frames()
+        # self.set_depth_frames(obst_wf)
+        # self.depth_frames = self.get_depth_frames()
         
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
         return valid
 
-    def simulate(self,max_time,delta_t,obst_wf):
+    def simulate(self,max_time,delta_t, obst_wf):
         np.seterr(all="ignore")
         warnings.filterwarnings('ignore')
+
         if(self.maxTzi > 2*g*self.total_mass and self.Controller.controllable != False):
             # print(f"{self.maxTzi} > {2*g*self.total_mass}")
             for i in range(int(max_time/delta_t)):

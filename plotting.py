@@ -34,25 +34,24 @@ def plot_attitude(rot_vec_history,rot_vec_est_history,delta_t):
     plt.show()
 
 def plot_position_3d(t_vec_history, obst_wf):
-    X, Y, Z  = t_vec_history[0],t_vec_history[1],t_vec_history[2]
     ax = plt.figure().add_subplot(projection='3d')
-    ax.plot(X,Y,Z, label = "position")  # Plot contour curves
-    radius = 0.2
-    height_tree = 10
+    for t in t_vec_history:
+        X, Y, Z  = t[0],t[1],t[2]
+        
+        ax.plot(X,Y,Z, label = "position")  # Plot contour curves
+        ax.set_xlim(0,5)
+        ax.set_ylim(0,5)
+        ax.set_zlim(0,10)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+    
+    # radius = 0.2
+    # height_tree = 10
 
-    for i in range(obst_wf.shape[1]):
-        x_grid,y_grid,z_grid = data_for_cylinder_along_z(obst_wf[0,i],obst_wf[1,i],radius,height_tree)
-        ax.plot_surface(x_grid,y_grid,z_grid)
-
-    ax.legend()
-    ax.set_xlim(0,5)
-    ax.set_ylim(0,5)
-    ax.set_zlim(0,10)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
-
-
+    # for i in range(obst_wf.shape[1]):
+    #     x_grid,y_grid,z_grid = data_for_cylinder_along_z(obst_wf[0,i],obst_wf[1,i],radius,height_tree)
+    #     ax.plot_surface(x_grid,y_grid,z_grid)
     plt.show()
 
 def plot_position_2d(t_vec_history,delta_t):
