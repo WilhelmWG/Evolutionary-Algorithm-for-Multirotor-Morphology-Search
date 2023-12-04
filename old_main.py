@@ -67,6 +67,32 @@ x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
 
+#Trajectory4 y+
+x_d = lambda t : np.array([0*t,1*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+
+x_d = lambda t : np.array([1*t,0*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+y+
+x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory2 y+z+
 x_d = lambda t : np.array([0*t,1*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
@@ -194,6 +220,14 @@ x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
 
+#NoMovementRotate
+x_d = lambda t : np.array([0*t,0*t,0*t])
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 
 
 
@@ -263,9 +297,9 @@ def main():
     # print(np.unravel_index(np.argmax(quad.dep_cams[0].depth_frame),quad.dep_cams[0].depth_frame.shape))
     # print(quad.IMU.R_est)
     # print(quad.IMU.gyro_bias_est)
-    # plt.plot_attitude(quad.rot_vec_history, quad.IMU.rot_vec_est_history, delta_t)
-    # plt.plot_position_2d(quad.t_vec_history,delta_t)
-    # plt.plot_position_3d(quad.t_vec_history,obst_wf)
+    plt.plot_attitude(quad.rot_vec_history, quad.IMU.rot_vec_est_history, delta_t)
+    plt.plot_position_2d(quad.t_vec_history,delta_t)
+    plt.plot_position_3d(quad.t_vec_history,obst_wf)
     t = np.linspace(delta_t,max_time+delta_t,int(max_time/delta_t)+1) 
     plt.plot_position_3d([x_d(t) for x_d in x_ds],obst_wf)
     

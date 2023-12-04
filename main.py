@@ -17,11 +17,12 @@ def main():
     best_sol = ga_instance.best_solutions
 
     i = 0
-    while os.path.exists(f"best_solution_{i}.txt"):
+    while os.path.exists(f"data/best_solution_{i}.txt"):
         i += 1
-    f = open(f"best_solution_{i}.txt","w")
+    f = open(f"data/best_solution_{i}.txt","w")
     f.write(f"{best_sol[ga_instance.generations_completed]}")
-    ga_instance.save()
+    f.close()
+    ga_instance.save(f"data/ga_instance{i}")
     ga_instance.plot_fitness()
     ga_instance.plot_genes(graph_type = "boxplot",solutions="best")
     ga_instance.plot_genes(graph_type = "histogram",solutions="best")

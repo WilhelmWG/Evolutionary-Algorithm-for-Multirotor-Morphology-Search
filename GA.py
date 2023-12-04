@@ -10,16 +10,105 @@ from pygad import utils as ut
 
 g = 9.81
 #simulation parameters
+delta_t = 0.01 #seconds
+max_time = 5
+
+#obstacles (unused)
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
 obst_wf[0,0] = 5
-delta_t = 0.01 #seconds
-max_time = 5
+
+
+
+m_IMU = 0.02
+m_dep_cam = 0.03
+m_centroid = 0.148
+m_rotor = 0.0 #accounted for
+m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here #not useful?????????
+d = 0.3
+max_angle = np.pi/2
+
+#IMU parameters
+k_a = 0.01
+k_m = 0.01
+k_b = np.reshape(np.array([0.1,0.1,0.1],dtype=float),(1,3))*0.01 #k_a/10
+gyro_bias = np.array([0,0,0],dtype=float)
+magnet_bias = np.array([0,0,0],dtype=float)
+
+#Camera Properties
+AoV = np.array([39.6,27.0,46.8]) * np.pi/180 #[Horizontal, Vertical, Diagonal]
+sensor_size = np.array([36,24,43.3]) #[Horizonta, Vertical, Diagonal]
+res = np.array([1920,1080])
+K = np.array([[1200, 0, res[0]/2],
+              [0,1200, res[1]/2],
+              [0,0,1]]) #Camera Intrinsics
+
+#controller parameters
+k_x_max = 20
+k_v_max = 10
+k_R_max = 10
+k_omega_max = 5
+
+
+
+#GA PARAMS
+#If the user did not assign the initial population to the initial_population parameter,
+# the initial population is created randomly based on the gene_space parameter.
+# Moreover, the mutation is applied based on this parameter.
+num_motor_comb = 20
+num_battery_types = 14
+num_generations = 1
+num_parents_mating = 100
+sol_per_pop = 200
+
+#[num_rotors, num_depcams]
+gene_space = [range(4,9), [1,2]]
+n_rotor_max = 8
+n_depcam_max = 2
+#[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma]]
+for i in range(n_rotor_max):
+    gene_space.append(range(num_motor_comb)) #ncomb
+    for i in range(3):
+        gene_space.append({'low': -max_angle, 'high': max_angle}) #angles
+    gene_space.append({'low': d/2, 'high': d}) #absolute value of displacement
+    for i in range(3):
+        gene_space.append({'low': -1, 'high': 1}) #direction of displacement
+    gene_space.append([-1,1]) #sigma
+
+#[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma],n_depmax[yaw,pitch,roll,r,x,y,z]]
+for i in range(n_depcam_max):
+    for i in range(3):
+        gene_space.append({'low': -max_angle, 'high': max_angle})#angles
+    gene_space.append({'low': d/3, 'high': d}) #radius
+    for i in range(3):
+        gene_space.append({'low': -1, 'high': 1}) #direction of displacement
+
+gene_space.append(range(num_battery_types))
+
+
+gene_space.append({'low': 0, 'high': k_x_max})
+gene_space.append({'low': 0, 'high': k_v_max})
+gene_space.append({'low': 0, 'high': k_R_max})
+gene_space.append({'low': 0, 'high': k_omega_max})
+
+
+num_genes = len(gene_space)
+
+
+
 
 x_ds = []
 b1_ds = []
 b3_ds = []
+
+#NoMovementRotate
+x_d = lambda t : np.array([0*t,0*t,0*t])
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 #Trajectory1 z+
 x_d = lambda t : np.array([0*t,0*t,1*t])
@@ -73,7 +162,8 @@ b3_ds.append(b3_d)
 #Trajectory2 y+z+
 x_d = lambda t : np.array([0*t,1*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
@@ -81,7 +171,8 @@ b3_ds.append(b3_d)
 #Trajectory3 x+z+
 x_d = lambda t : np.array([1*t,0*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
@@ -89,7 +180,8 @@ b3_ds.append(b3_d)
 #Trajectory4 y+z-
 x_d = lambda t : np.array([0*t,1*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
@@ -97,7 +189,8 @@ b3_ds.append(b3_d)
 #Trajectory5 x+z-
 x_d = lambda t : np.array([1*t,0*t,-1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
 x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
@@ -110,7 +203,34 @@ x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
 
-#Trajectory5 x+y+z-
+#Trajectory4 y+
+x_d = lambda t : np.array([0*t,1*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+
+x_d = lambda t : np.array([1*t,0*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+# b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+y+
+x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+
+#Trajectory5 x+y+z+
 x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
@@ -164,82 +284,6 @@ b3_d = lambda t : np.array([0*t,0*t,1*t/t])
 x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
-
-m_IMU = 0.02
-m_dep_cam = 0.03
-m_centroid = 0.148
-m_rotor = 0.0 #accounted for
-m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here
-d = 0.3
-max_angle = np.pi/2
-
-#IMU parameters
-k_a = 0.01
-k_m = 0.01
-k_b = np.reshape(np.array([0.1,0.1,0.1],dtype=float),(1,3))*0.01 #k_a/10
-gyro_bias = np.array([0,0,0],dtype=float)
-magnet_bias = np.array([0,0,0],dtype=float)
-
-#Camera Properties
-AoV = np.array([39.6,27.0,46.8]) * np.pi/180 #[Horizontal, Vertical, Diagonal]
-sensor_size = np.array([36,24,43.3]) #[Horizonta, Vertical, Diagonal]
-res = np.array([1920,1080])
-K = np.array([[1200, 0, res[0]/2],
-              [0,1200, res[1]/2],
-              [0,0,1]]) #Camera Intrinsics
-
-#controller parameters
-k_x_max = 20
-k_v_max = 10
-k_R_max = 10
-k_omega_max = 5
-
-
-
-#GA PARAMS
-#If the user did not assign the initial population to the initial_population parameter,
-# the initial population is created randomly based on the gene_space parameter.
-# Moreover, the mutation is applied based on this parameter.
-num_motor_comb = 20
-num_battery_types = 14
-num_generations = 100
-num_parents_mating = 25
-sol_per_pop = 200
-
-#[num_rotors, num_depcams]
-gene_space = [range(4,9), [1,2]]
-n_rotor_max = 8
-n_depcam_max = 2
-#[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma]]
-for i in range(n_rotor_max):
-    gene_space.append(range(num_motor_comb)) #ncomb
-    for i in range(3):
-        gene_space.append({'low': -max_angle, 'high': max_angle}) #angles
-    gene_space.append({'low': 0, 'high': d}) #absolute value of displacement
-    for i in range(3):
-        gene_space.append({'low': -1, 'high': 1}) #direction of displacement
-    gene_space.append([-1,1]) #sigma
-
-#[num_rotors, num_depcams, n_rmax*[num_comb,yaw,pitch,roll,r,x,y,z,sigma],n_depmax[yaw,pitch,roll,r,x,y,z]]
-for i in range(n_depcam_max):
-    for i in range(3):
-        gene_space.append({'low': -max_angle, 'high': max_angle})#angles
-    gene_space.append({'low': 0, 'high': d}) #radius
-    for i in range(3):
-        gene_space.append({'low': -1, 'high': 1}) #direction of displacement
-
-gene_space.append(range(num_battery_types))
-
-
-gene_space.append({'low': 0, 'high': k_x_max})
-gene_space.append({'low': 0, 'high': k_v_max})
-gene_space.append({'low': 0, 'high': k_R_max})
-gene_space.append({'low': 0, 'high': k_omega_max})
-
-
-num_genes = len(gene_space)
-
-
 
 
 def load_MR_from_sol(solution):
@@ -520,7 +564,7 @@ def run_ga():
                     fitness_func=fitness_func,
                     save_best_solutions=True,
                     mutation_type=mutation_by_space_x,
-                    mutation_num_genes=4,
+                    mutation_num_genes=5,
                     crossover_type=None,
                     parallel_processing=["process",10],
                     keep_elitism=5,
