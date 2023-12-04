@@ -50,6 +50,14 @@ x_ds = []
 b1_ds = []
 b3_ds = []
 
+#NoMovementRotate
+x_d = lambda t : np.array([0*t,0*t,0*t])
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
 #Trajectory1 z+
 x_d = lambda t : np.array([0*t,0*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
@@ -220,13 +228,7 @@ x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
 
-#NoMovementRotate
-x_d = lambda t : np.array([0*t,0*t,0*t])
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-b1_ds.append(b1_d)
-b3_ds.append(b3_d)
+
 
 
 
