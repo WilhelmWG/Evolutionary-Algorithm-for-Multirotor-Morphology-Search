@@ -15,14 +15,155 @@ obst_wf[2,2] = 5
 obst_wf[1,1] = 4
 obst_wf[0,0] = 5
 delta_t = 0.01 #seconds
-max_time = 20
+max_time = 5
 
-#Trajectory
-# x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])##
-# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-x_d = lambda t : np.array([0*t+1,1*t+1,1*t+1])
+x_ds = []
+b1_ds = []
+b3_ds = []
+
+#Trajectory1 z+
+x_d = lambda t : np.array([0*t,0*t,1*t])
 b1_d = lambda t : np.array([1*t/t,0*t,0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#UPRIGHT TRAJ
+#Trajectory1 z-
+x_d = lambda t : np.array([0*t,0*t,-1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory2 y+z+
+x_d = lambda t : np.array([0*t,1*t,1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory3 x+z+
+x_d = lambda t : np.array([1*t,0*t,1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory4 y+z-
+x_d = lambda t : np.array([0*t,1*t,-1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+z-
+x_d = lambda t : np.array([1*t,0*t,-1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory2 y+z+
+x_d = lambda t : np.array([0*t,1*t,1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory3 x+z+
+x_d = lambda t : np.array([1*t,0*t,1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory4 y+z-
+x_d = lambda t : np.array([0*t,1*t,-1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+z-
+x_d = lambda t : np.array([1*t,0*t,-1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+y+z-
+x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,-1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Trajectory5 x+y+z-
+x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,1*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+
+#TrajectoryLast
+x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#TrajectoryLast
+x_d = lambda t : np.array([0.4*np.sin(np.pi*t),0.4*t,0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Swivvle TRAJ
+x_d = lambda t : np.array([0.5*np.cos(np.pi*t),1*t,0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+x_d = lambda t : np.array([1*t,0.5*np.cos(np.pi*t),0*t])
+b1_d = lambda t : np.array([1*t/t,0*t,0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+#Swivvle + Rotation
+x_d = lambda t : np.array([0.5*np.cos(np.pi*t),1*t,0*t])
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
+
+x_d = lambda t : np.array([1*t,0.5*np.cos(np.pi*t),0*t])
+b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
+b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+x_ds.append(x_d)
+b1_ds.append(b1_d)
+b3_ds.append(b3_d)
 
 m_IMU = 0.02
 m_dep_cam = 0.03
@@ -151,7 +292,7 @@ def load_MR_from_sol(solution):
 
     Battery = MRD.Battery(bat_m,bat_Ah,bat_S,bat_name)
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
-    TP = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d,b3_d)
+    TP = MRD.TrajectoryPlanner(delta_t,max_time,x_ds,b1_ds,b3_ds)
     Controller = MRD.Controller(k_x,k_v,k_R, k_omega, TP,rotors)
     MR = MRD.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),
@@ -170,25 +311,34 @@ def load_MR_from_sol(solution):
 
 
 def fitness_func(ga_instance, solution, solution_idx):
+    fitness = 0
     MR = load_MR_from_sol(solution)
-    valid = MR.simulate(max_time,delta_t,obst_wf)
-    w_t = 1
-    w_r = 1 
-    w_A = 100
-    if valid:
-        fitness = -w_t*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_r*np.linalg.norm(MR.rot_err_history)+ w_A*MR.Battery.currentAh/MR.Battery.maxAh
+    for i in range(len(MR.Controller.TP.x_ds)-1):
+        traj_fitness = 0
+        valid = MR.simulate(max_time,delta_t,obst_wf)
         
-        # print(f"FITNESS:::::: {fitness}")
-    
-        if np.isnan(fitness):
-            fitness = -1
-        else:
-            print(f"Battery left: {MR.Battery.currentAh/MR.Battery.maxAh}")
-            print(f"FITNESS:::::: {fitness}")
+        w_t = 1
+        w_r = 1 
+        w_A = 100
+
+        if valid:
+            traj_fitness = -w_t*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_r*np.linalg.norm(MR.rot_err_history)
+            
+            # print(f"FITNESS:::::: {fitness}")
         
-    else: 
-        fitness = -1
+            if np.isnan(traj_fitness):
+                traj_fitness = -100
+        else: 
+            traj_fitness = -100
+
+        fitness += traj_fitness
+        MR.next_trajectory()
+    if not np.isnan(w_A*MR.Battery.currentAh/MR.Battery.maxAh):
+        fitness += w_A*MR.Battery.currentAh/MR.Battery.maxAh
     
+
+    print(f"Battery left: {MR.Battery.currentAh/MR.Battery.maxAh}")
+    print(f"FITNESS:::::: {fitness}")
     
     return fitness
 
