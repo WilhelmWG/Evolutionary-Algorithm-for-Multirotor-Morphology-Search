@@ -58,7 +58,7 @@ k_omega_max = 5
 # Moreover, the mutation is applied based on this parameter.
 num_motor_comb = 20
 num_battery_types = 14
-num_generations = 1
+num_generations = 50
 num_parents_mating = 100
 sol_per_pop = 200
 
@@ -402,7 +402,7 @@ def motor_comb_idxs():
     return idxs
 
 
-
+#Slightly modified from PyGAD source
 def mutation_by_space_x(offspring,ga_instance):
 
     """
@@ -569,7 +569,7 @@ def run_ga():
                     parallel_processing=["process",10],
                     keep_elitism=5,
                     K_tournament=4,
-                    stop_criteria=["reach_95", "saturate_15"],
+                    stop_criteria=["reach_95", "saturate_7"],
                     random_seed = 123)
                     
     ga_instance.summary()
