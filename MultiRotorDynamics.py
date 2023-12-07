@@ -187,15 +187,18 @@ class Battery():
 
 
 class TrajectoryPlanner():
-    def __init__(self, delta_t, max_time, x_ds,b1_ds,b3_ds):
+    def __init__(self, delta_t, max_time, x_ds,b1_ds,b3_ds,random_yaw):
         self.delta_t = delta_t
         self.max_time = max_time
+        self.random_yaw = random_yaw
         self.trajectory_num = 0
         self.t = np.linspace(delta_t,max_time+delta_t,int(max_time/delta_t)+1)
 
         self.x_ds = [x_d(self.t) for x_d in x_ds]
         self.x_dot_ds = [derivative(x_d,self.t,dx=1e-6) for x_d in x_ds]
         self.x_dot_dot_ds = [derivative(x_d,self.t,dx=1e-6,n=2) for x_d in x_ds]
+        
+        
         self.b1_ds = [b1_d(self.t) for b1_d in b1_ds]
         self.b3_ds = [b3_d(self.t) for b3_d in b3_ds]
 
@@ -209,11 +212,17 @@ class TrajectoryPlanner():
         self.x_d = self.x_ds[self.trajectory_num]
         self.x_dot_d = self.x_dot_ds[self.trajectory_num]
         self.x_dot_dot_d = self.x_dot_dot_ds[self.trajectory_num]
-        self.b1_d = self.b1_ds[self.trajectory_num]
+        t = self.t
+        if self.random_yaw:
+            theta = np.random.uniform(0,2*np.pi)
+            self.b1_d = np.array([np.cos(theta)*t/t,np.sin(theta)*t/t,0*t])
+        else:
+            self.b1_d = self.b1_ds[self.trajectory_num]
         self.b3_d = self.b3_ds[self.trajectory_num]
         self.trajectory_num += 1
 
         self.prev_R_d = np.eye(3)
+        self.R_r = np.eye(3)
         self.prev_ang_vel_d = np.zeros((3,))
         self.ang_vel_dot_d = np.zeros((3,))
 
@@ -266,7 +275,8 @@ class Controller():
         
         self.update_trajectory(time)
         x_d, x_dot_d, x_dot_dot_d, b1_r, b3_r = self.traj
-
+        b2_r = np.cross(b1_r,b3_r)
+        R_r = np.array([b1_r,b2_r,b3_r])
         #Positional errors
         e_x = t_vec - x_d
         e_v = t_vec_dot - x_dot_d
@@ -300,6 +310,7 @@ class Controller():
         e_omega = ang_vel-R_mat.T@R_d@ang_vel_d
         
         #update previous with current
+        self.TP.R_r = R_r
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
         return e_x, e_v, e_R, e_omega
@@ -505,12 +516,15 @@ class MultiRotor:
     def reset_state(self):
         self.time = 0
         self.t_vec = np.zeros((3,))
+        self.t_vec_dot = np.random.uniform(-0.25,0.25,3)
+        self.rot_vec = np.random.uniform(-np.pi/8,np.pi/8,3)
+        self.ang_vel = np.random.uniform(-np.pi/8,np.pi/8,3)
+        self.R = R.from_euler("zxy",self.rot_vec).as_matrix()
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.reshape(self.t_vec,(3,1))
         self.rot_vec_history = np.reshape(self.rot_vec,(3,1))
         self.rot_err_history = np.array([])
-        # self.rot_vec = np.zeros((3,))
-        # self.R = np.eye(3)
+        
 
     def next_trajectory(self):
         self.reset_state()
@@ -551,7 +565,7 @@ class MultiRotor:
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
-        Psi = 1/2*(np.eye(3)-self.Controller.TP.prev_R_d.T@self.R)
+        Psi = 1/2*(np.eye(3)-self.Controller.TP.R_r.T@self.R)
         self.rot_err_history = np.append(self.rot_err_history,Psi)
         # self.set_depth_frames(obst_wf)
         # self.depth_frames = self.get_depth_frames()

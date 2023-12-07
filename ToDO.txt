@@ -9,9 +9,34 @@ Why 4th order no workie?
 
 
 
+Make lineage???????
+#Basically need to backtrace the final best solution to see how it evolved.
+#But i do not know which parent will father the final best solution.
+#For every set of parents, add the parent to the list of parents with the end parent being the one that is closest to you.
+#see rxy
+parents_history = [] # one entry per generation
+on_parents(parents):
+    for parent in parents:
+
+on_generation(generation):
+    print(generation)
+
+
+Morphos:
+- no random b1d
+- random b1d (donezo)
+- Rank selection no random b1d
+- Rank selection random b1d
+- Crossover
+- high mutation rate
+
+
 
 
 Done:
+random init
+make error from reference not desired
+make b1_d random toggleable
 Make more optimal controller for fully actuated MAV:
 - calculate rxy^2 from control allocation matrix
 - Calculate optimal b3_d from b3_r and b3' using bisection
