@@ -23,12 +23,14 @@ on_generation(generation):
 
 
 Morphos:
-- no random b1d
-- random b1d (donezo)
+- no random b1d (done)
+- random b1d (done)
+- less elitism (done)
 - Rank selection no random b1d
 - Rank selection random b1d
-- Crossover
-- high mutation rate
+- Crossover 
+- high mutation rate (done)
+- valuable battery
 
 
 

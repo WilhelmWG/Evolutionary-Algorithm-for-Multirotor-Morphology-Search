@@ -25,8 +25,6 @@ obst_wf[0,0] = 5
 m_IMU = 0.02
 m_dep_cam = 0.03
 m_centroid = 0.148
-m_rotor = 0.0 #accounted for
-m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here #not useful?????????
 d = 0.3
 max_angle = np.pi/2
 
@@ -93,9 +91,6 @@ gene_space.append({'low': 0, 'high': k_R_max})
 gene_space.append({'low': 0, 'high': k_omega_max})
 
 num_genes = len(gene_space)
-
-
-
 
 
 
@@ -169,9 +164,11 @@ def load_MR_from_sol(solution):
 
 def fitness_func(ga_instance, solution, solution_idx):
     fitness = 0
+    failed_traj_count = 0
     MR = load_MR_from_sol(solution)
     for i in range(len(MR.Controller.TP.x_ds)-1):
         traj_fitness = 0
+        MR.next_trajectory()
         valid = MR.simulate(max_time,delta_t,obst_wf)
         
         w_t = 1
@@ -185,17 +182,20 @@ def fitness_func(ga_instance, solution, solution_idx):
         
             if np.isnan(traj_fitness):
                 traj_fitness = -100
+                failed_traj_count += 1
         else: 
             traj_fitness = -100
+            failed_traj_count += 1
 
         fitness += traj_fitness
-        MR.next_trajectory()
-    if not np.isnan(w_A*MR.Battery.currentAh/MR.Battery.maxAh):
+
+    if not np.isnan(w_A*MR.Battery.currentAh/MR.Battery.maxAh) and not (MR.Battery.currentAh/MR.Battery.maxAh == 1):
         fitness += w_A*MR.Battery.currentAh/MR.Battery.maxAh
     
 
     print(f"Battery left: {MR.Battery.currentAh/MR.Battery.maxAh}")
     print(f"FITNESS:::::: {fitness}")
+    print(f"failed trajectories : {failed_traj_count}")
     
     return fitness
 
@@ -367,7 +367,35 @@ def mutation_by_space_x(offspring,ga_instance):
     return offspring
 
 
+
+
+# class Lineage():
+#     def __init__(self):
+#         self.lineage = None
+
+#     def track_lineage(self,ga_instance, parents):
+#         if type(self.lineage) == type(None):
+#             self.lineage = parents
+#             print("hehey")
+#         else:
+#             for parent in parents:
+#                 for grandparent in self.lineage:
+#                     parent_diff = parent == grandparent
+#                     print(parent_diff)
+#                     zeros = ga_instance.num_genes - np.count_nonzero(parent_diff)
+#                     print(zeros)
+#                     if zeros <= (ga_instance.mutation_num_genes):
+#                         print("letsgooooo")
+
+
+
+
+
+#         print(type(parents))
+
 def run_ga():
+    # lineage = Lineage()
+
     ga_instance = ga.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
                     sol_per_pop=sol_per_pop,
@@ -377,13 +405,14 @@ def run_ga():
                     fitness_func=fitness_func,
                     save_best_solutions=True,
                     mutation_type=mutation_by_space_x,
-                    mutation_num_genes=5,
+                    mutation_num_genes=15,
                     crossover_type=None,
                     parallel_processing=["process",10],
                     keep_elitism=5,
                     K_tournament=4,
                     stop_criteria=["reach_95", "saturate_7"],
-                    random_seed = 123)
+                    random_seed = 123
+                    )
                     
     ga_instance.summary()
     ga_instance.run()

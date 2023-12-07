@@ -202,7 +202,6 @@ class TrajectoryPlanner():
         self.b1_ds = [b1_d(self.t) for b1_d in b1_ds]
         self.b3_ds = [b3_d(self.t) for b3_d in b3_ds]
 
-        self.load_next_trajectory()
 
         
     def get_trajectory(self,time):
