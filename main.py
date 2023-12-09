@@ -1,4 +1,3 @@
-import control as ct
 import os
 import numpy as np
 import GA as ga

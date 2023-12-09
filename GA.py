@@ -165,10 +165,11 @@ def load_MR_from_sol(solution):
 def fitness_func(ga_instance, solution, solution_idx):
     fitness = 0
     failed_traj_count = 0
+    random_init = True
     MR = load_MR_from_sol(solution)
     for i in range(len(MR.Controller.TP.x_ds)-1):
         traj_fitness = 0
-        MR.next_trajectory()
+        MR.next_trajectory(random_init)
         valid = MR.simulate(max_time,delta_t,obst_wf)
         
         w_t = 1

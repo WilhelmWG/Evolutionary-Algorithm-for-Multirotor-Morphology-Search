@@ -1,4 +1,3 @@
-import control as ct
 import numpy as np
 import pygad as ga
 import MultiRotorDynamics as MRD

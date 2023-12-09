@@ -274,8 +274,8 @@ class Controller():
         
         self.update_trajectory(time)
         x_d, x_dot_d, x_dot_dot_d, b1_r, b3_r = self.traj
-        b2_r = np.cross(b1_r,b3_r)
-        R_r = np.array([b1_r,b2_r,b3_r])
+        b2_r = np.cross(b3_r,b1_r)
+        R_r = np.array([b1_r,b2_r,b3_r]).T
         #Positional errors
         e_x = t_vec - x_d
         e_v = t_vec_dot - x_dot_d
@@ -512,12 +512,19 @@ class MultiRotor:
             depth_frames.append(dep_cam.depth_frame)
         return depth_frames
     
-    def reset_state(self):
+    def reset_state(self, random_init):
         self.time = 0
         self.t_vec = np.zeros((3,))
-        self.t_vec_dot = np.random.uniform(-0.25,0.25,3)
-        self.rot_vec = np.random.uniform(-np.pi/8,np.pi/8,3)
-        self.ang_vel = np.random.uniform(-np.pi/8,np.pi/8,3)
+        if random_init:
+
+            self.t_vec_dot = np.random.uniform(-0.25,0.25,3)
+            self.rot_vec = np.random.uniform(-np.pi/8,np.pi/8,3)
+            self.ang_vel = np.random.uniform(-np.pi/8,np.pi/8,3)
+        else: 
+            self.t_vec_dot = np.zeros((3,))
+            self.rot_vec = np.zeros((3,))
+            self.ang_vel = np.zeros((3,))
+
         self.R = R.from_euler("zxy",self.rot_vec).as_matrix()
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.reshape(self.t_vec,(3,1))
@@ -525,25 +532,21 @@ class MultiRotor:
         self.rot_err_history = np.array([])
         
 
-    def next_trajectory(self):
-        self.reset_state()
+    def next_trajectory(self,random_init):
+        self.reset_state(random_init)
         self.Controller.TP.load_next_trajectory()
 
 
     def simulate_timestep(self,delta_t,obst_wf):
         valid = True
         forces_bf = self.calculate_sum_of_forces_bf()
-        # print(f"Forces in world frame: {self.R@forces_bf}")
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
-        # if(self.t_vec[2] < 0):
-        #     valid = False
         if(np.linalg.norm(self.t_vec - self.Controller.TP.x_d[:,int(self.time/delta_t)]) > 1) :
             valid = False
-        # print(f"x = {self.t_vec}")
         self.R += self.R_dot*delta_t
 
-        #Double transform to maintain SO(3) (Kinda cheating), Should not be included when using ode45
+        #Double transform to maintain SO(3)
         self.rot_vec = R.from_matrix(self.R).as_euler("zxy")
         self.R  = R.from_euler("zxy",self.rot_vec).as_matrix()
         
@@ -564,7 +567,9 @@ class MultiRotor:
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
-        Psi = 1/2*(np.eye(3)-self.Controller.TP.R_r.T@self.R)
+        Psi = 1/2*np.trace((np.eye(3)-self.Controller.TP.R_r.T@self.R))
+        print(Psi)
+        print(np.eye(3)-self.Controller.TP.R_r.T@self.R)
         self.rot_err_history = np.append(self.rot_err_history,Psi)
         # self.set_depth_frames(obst_wf)
         # self.depth_frames = self.get_depth_frames()

@@ -71,6 +71,34 @@ def plot_position_2d(t_vec_history,delta_t):
         fig.savefig("data/test.png")
     plt.show()
 
+
+def plot_position_vs_ref_and_errors(t_vec_history,t_vec_desired,Psi,delta_t):
+    num_data_points = t_vec_history.shape[1]
+    t = np.linspace(0,num_data_points*delta_t,num_data_points)
+    ylabels = ["x (meters)","y (meters)","z (meters)","e_x", "Psi"]
+    titles = ["x","y","z","squared positional error", "Orientation error"]
+    fig, ax = plt.subplots(1,5)
+    for i in range(t_vec_history.shape[0]):
+        
+        ax[i].plot(t,t_vec_history[i])
+        ax[i].plot(t,t_vec_desired[i])
+        ax[i].set(xlabel='time (s)', ylabel=ylabels[i],
+        title=titles[i])
+        ax[i].grid()
+
+        fig.savefig("data/test.png")
+
+    pos_err_sqrd = np.linalg.norm(t_vec_history - t_vec_desired,axis = 0)**2
+
+    ax[3].plot(t,pos_err_sqrd)
+    ax[3].set(xlabel='time (s)', ylabel=ylabels[3], title=titles[3])
+    ax[3].grid()
+
+    ax[4].plot(t[:-1],Psi)
+    ax[4].set(xlabel='time (s)', ylabel=ylabels[4], title=titles[4])
+    ax[4].grid()
+    plt.show()    
+
 def plot_MR_design(MR: MRD.MultiRotor):
     fig = plt.figure()
     xlim = ylim = zlim = [-0.2,0.2]
@@ -83,7 +111,7 @@ def plot_MR_design(MR: MRD.MultiRotor):
     e3 = np.array([0,0,1])
 
     rotors = MR.rotors
-    frame_scale = 0.04
+    frame_scale = 0.06
     for rotor in rotors:
         t_vec = rotor.t_vec
         R = rotor.R
