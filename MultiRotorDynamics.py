@@ -568,8 +568,6 @@ class MultiRotor:
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
         Psi = 1/2*np.trace((np.eye(3)-self.Controller.TP.R_r.T@self.R))
-        print(Psi)
-        print(np.eye(3)-self.Controller.TP.R_r.T@self.R)
         self.rot_err_history = np.append(self.rot_err_history,Psi)
         # self.set_depth_frames(obst_wf)
         # self.depth_frames = self.get_depth_frames()
