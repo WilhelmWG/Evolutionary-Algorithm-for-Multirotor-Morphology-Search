@@ -7,10 +7,11 @@ from Trajs import x_ds, b1_ds, b3_ds
 
 
 # ga_instance_path = "data/ga15mutato"
-# solution_path = "data/best_solution_0.txt"
+# solution_path = "data/bs_keepParents.txt"
 # solution_path = "data/quadrotor.txt"
-solution_path = "data/tilted_hexa_rotor.txt"
-trajectory_number = 1
+solution_path = "data/OctorotorHorizontal.txt"
+# solution_path = "data/tilted_hexa_rotor.txt"
+trajectory_number =21
 random_init = True
 
 def main():

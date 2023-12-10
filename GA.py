@@ -48,7 +48,7 @@ k_x_max = 20
 k_v_max = 10
 k_R_max = 10
 k_omega_max = 5
-random_yaw = True
+random_yaw = False
 
 #GA PARAMS
 #If the user did not assign the initial population to the initial_population parameter,
@@ -443,8 +443,8 @@ def run_ga():
                     mutation_num_genes=15,
                     crossover_type=None,
                     parallel_processing=["process",10],
-                    keep_elitism=5,
-                    keep_parents=0,
+                    keep_elitism=0,
+                    keep_parents=-1,
                     K_tournament=4,
                     stop_criteria=["reach_95", "saturate_7"],
                     on_generation=on_generation,
