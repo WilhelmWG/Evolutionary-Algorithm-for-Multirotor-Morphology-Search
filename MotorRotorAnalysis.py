@@ -94,7 +94,7 @@ motor_dict={0  : {"mass" : 0.032 + 0.0041,      "RPM" : rpms[0,:],  "RPS" : rpms
             19 : {"mass" : 0.040 + 0.0041,      "RPM" : rpms[19,:], "RPS" : rpms[19,:]/60, "C_T": 0.000073960, "A" : currents[19,:],  "W" : powers[19,:],  "name": "T-MOTOR F80 - Pro 6040 2-blade"      , "S" : [3,4,5]}, 
             }
 
-battery_dict = {0  : {"mass" : 0.220,       "Ah" : 2.3, "S" : 4,   "name": "Tattu"                                     }, 
+battery_dict = {0  : {"mass" : 0.220,       "Ah" : 2.3,  "S" : 4,   "name": "Tattu"                                     }, 
                 1  : {"mass" : 0.374,       "Ah" : 4   , "S" : 4,   "name": "Spektrum 4s"                               }, 
                 2  : {"mass" : 0.285,       "Ah" : 4   , "S" : 3,   "name": "Spektrum 3s"                               }, 
                 3  : {"mass" : 0.536,       "Ah" : 4   , "S" : 5,   "name": "Turnigy 5S"                                }, 

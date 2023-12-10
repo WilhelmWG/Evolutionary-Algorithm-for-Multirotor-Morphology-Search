@@ -48,7 +48,7 @@ k_x_max = 20
 k_v_max = 10
 k_R_max = 10
 k_omega_max = 5
-random_yaw = False
+random_yaw = True
 
 #GA PARAMS
 #If the user did not assign the initial population to the initial_population parameter,
@@ -394,14 +394,48 @@ def mutation_by_space_x(offspring,ga_instance):
 
 #         print(type(parents))
 
+def on_generation(ga_instance):
+    print(f"generations Completed: {ga_instance.generations_completed}")
+
+
+
+
+#Generates an initial population with motor-battery constraints enforced by
+# one iteration of the mutation operator
+def gen_init_pop():
+    
+    ga_instance = ga.GA(num_generations=num_generations,
+                num_parents_mating=num_parents_mating,
+                sol_per_pop=sol_per_pop,
+                num_genes=num_genes,
+                gene_space=gene_space,
+                parent_selection_type='tournament',
+                fitness_func=fitness_func,
+                save_best_solutions=True,
+                mutation_type=mutation_by_space_x,
+                mutation_num_genes=15,
+                crossover_type=None,
+                parallel_processing=["process",10],
+                keep_elitism=5,
+                keep_parents=0,
+                K_tournament=4,
+                stop_criteria=["reach_95", "saturate_7"],
+                on_generation=on_generation,
+                random_seed = 123
+                )
+
+    init_pop = ga_instance.initial_population
+    one_mutation = mutation_by_space_x(init_pop, ga_instance)
+    return one_mutation
 def run_ga():
     # lineage = Lineage()
-
+    init_pop = gen_init_pop()
     ga_instance = ga.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
                     sol_per_pop=sol_per_pop,
                     num_genes=num_genes,
                     gene_space=gene_space,
+                    initial_population=init_pop,
                     parent_selection_type='tournament',
                     fitness_func=fitness_func,
                     save_best_solutions=True,
@@ -410,8 +444,10 @@ def run_ga():
                     crossover_type=None,
                     parallel_processing=["process",10],
                     keep_elitism=5,
+                    keep_parents=0,
                     K_tournament=4,
                     stop_criteria=["reach_95", "saturate_7"],
+                    on_generation=on_generation,
                     random_seed = 123
                     )
                     

@@ -46,9 +46,7 @@ k_x = 16*m_total
 k_v = 5.6*m_total
 k_R = 8.81*0.1
 k_omega = 2.54*0.1
-x_ds = []
-b1_ds = []
-b3_ds = []
+
 
 
 
@@ -99,6 +97,7 @@ def main():
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
     # for i in range(int(6)):
     #     quad.simulate_timestep(delta_t,obst_wf)
+    quad.next_trajectory(True)
     if(quad.maxTzi > 2*g*quad.total_mass):
         print(f"{quad.maxTzi} > {2*g*quad.total_mass}")
         for i in range(int(max_time/delta_t)):
