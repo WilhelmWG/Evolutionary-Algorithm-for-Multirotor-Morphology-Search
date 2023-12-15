@@ -12,18 +12,17 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+This project is an implementation of general multirotor dynamics and an evolutionary algorithm to search for and generate novel Micro Aerial Vehicles (MAVs). The designs are evolved to perform for a set of trajectories designed to mimic traversing an underground environment similar to what is expected in the DARPA subterranean challenge. Their fitness is evaluated based on their ability to follow these trajectories while maintaining designated full orientation. This involves minimizing the errors between the true trajectory and the desired one while simultaneously minimizing the amount of battery power expended.
 
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
+To run the files in this repository a python environment for version 3.11.5 can be created using the EvolveEnv.yml file using the following command
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+```sh
+   conda env create -f environment.yml
+```
 
 ### Prerequisites
 
