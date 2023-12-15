@@ -14,7 +14,8 @@
 ## About The Project
 This project is an implementation of general multirotor dynamics and an evolutionary algorithm to search for and generate novel Micro Aerial Vehicles (MAVs). The designs are evolved to perform for a set of trajectories designed to mimic traversing an underground environment similar to what is expected in the DARPA subterranean challenge. Their fitness is evaluated based on their ability to follow these trajectories while maintaining designated full orientation. This involves minimizing the errors between the true trajectory and the desired one while simultaneously minimizing the amount of battery power expended.
 
-
+## File contents
+GA.py contains the majority of parameters and function required to make a pygad.GA instance
 
 <!-- GETTING STARTED -->
 ## Getting Started
