@@ -25,7 +25,7 @@ conda env create -f EvolveEnv.yml
 ```
 
 ## Usage
-One example of using this repository is as follows. 
+One key example of using this repository is as follows. 
 1. Modify the parameters of GA.py to what you want to test for. 
 2. Modify Trajs.py if new or modified trajectories are desired.
 3. Run main.py
