@@ -59,14 +59,14 @@ def main():
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
 
     TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_ds,b1_ds,b3_ds,False)
-    Battery = MRD.Battery(0.6,5,6,"big")
+    Battery = MRD.Battery(0.6,5,6,"")
     #Normal Quadrotor rotors
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,0))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/8,0],dtype=float),np.array([+d/np.sqrt(2),-d/np.sqrt(2),-0.25],dtype=float),20,1,16))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/8],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/8,0],dtype=float),np.array([+d/np.sqrt(2),-d/np.sqrt(2),-0.25],dtype=float),20,1,16))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/8],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
     
     #Custom
     # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,-np.pi/8],dtype=float),np.array([d,0,0],dtype=float),20,-1,16))
@@ -97,7 +97,8 @@ def main():
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
     # for i in range(int(6)):
     #     quad.simulate_timestep(delta_t,obst_wf)
-    quad.next_trajectory(True)
+    for i in range(19):
+        quad.next_trajectory(False)
     if(quad.maxTzi > 2*g*quad.total_mass):
         print(f"{quad.maxTzi} > {2*g*quad.total_mass}")
         for i in range(int(max_time/delta_t)):

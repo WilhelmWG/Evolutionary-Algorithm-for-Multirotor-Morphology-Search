@@ -282,7 +282,7 @@ class Controller():
 
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        b3_d = fr/np.linalg.norm(fr)
+        # b3_d = fr/np.linalg.norm(fr)
         b3_d = self.get_b3d(b3_r,fr,16)
         
         cross31 = np.cross(b3_d,b1_r)
