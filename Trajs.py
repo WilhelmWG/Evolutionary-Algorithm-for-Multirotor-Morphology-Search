@@ -149,7 +149,7 @@ b1_ds.append(b1_d)
 b3_ds.append(b3_d)
 
 
-#TrajectoryLast
+#Screw Traj
 x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])
@@ -157,7 +157,7 @@ x_ds.append(x_d)
 b1_ds.append(b1_d)
 b3_ds.append(b3_d)
 
-#TrajectoryLast
+#Screw Traj
 x_d = lambda t : np.array([0.4*np.sin(np.pi*t),0.4*t,0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
 b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
 b3_d = lambda t : np.array([0*t,0*t,1*t/t])

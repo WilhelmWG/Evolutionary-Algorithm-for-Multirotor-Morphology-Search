@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3D, Patch3D, Poly3DCollection, Text3D
 
 
-
+# from https://stackoverflow.com/questions/26989131/add-cylinder-to-plot
 def data_for_cylinder_along_z(center_x,center_y,radius,height_z):
     z = np.linspace(0, height_z, 50)
     theta = np.linspace(0, 2*np.pi, 50)
@@ -80,7 +80,7 @@ def plot_position_vs_ref_and_errors(t_vec_history,t_vec_desired,Psi,delta_t):
     fig, ax = plt.subplots(1,5)
     for i in range(t_vec_history.shape[0]):
         
-        ax[i].plot(t,t_vec_history[i])
+        ax[i].plot(t[1:],t_vec_history[i,1:])
         ax[i].plot(t,t_vec_desired[i])
         ax[i].set(xlabel='time (s)', ylabel=ylabels[i],
         title=titles[i])
@@ -90,7 +90,7 @@ def plot_position_vs_ref_and_errors(t_vec_history,t_vec_desired,Psi,delta_t):
 
     pos_err_sqrd = np.linalg.norm(t_vec_history - t_vec_desired,axis = 0)**2
 
-    ax[3].plot(t,pos_err_sqrd)
+    ax[3].plot(t[1:],pos_err_sqrd[1:])
     ax[3].set(xlabel='time (s)', ylabel=ylabels[3], title=titles[3])
     ax[3].grid()
 
@@ -115,31 +115,43 @@ def plot_MR_design(MR: MRD.MultiRotor):
     for rotor in rotors:
         t_vec = rotor.t_vec
         R = rotor.R
-        
+        if rotor.sigma == -1:
+            color = "m"
+        else:
+            color = "r"
         ax.add_line(Line3D([0,t_vec[0]],[0,t_vec[1]],[0,t_vec[2]]))
-        ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e1*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e1*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e1*frame_scale],color='r')) #x
-        ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e2*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e2*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e2*frame_scale],color='r')) #y
-        ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e1*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e1*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e1*frame_scale],color='r')) #x
-        ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e2*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e2*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e2*frame_scale],color='r')) #y
+        ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e1*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e1*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e1*frame_scale],color=color)) #x
+        ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e2*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e2*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e2*frame_scale],color=color)) #y
+        ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e1*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e1*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e1*frame_scale],color=color)) #x
+        ax.add_line(Line3D([t_vec[0],t_vec[0]-R[0,:]@e2*frame_scale],[t_vec[1],t_vec[1]-R[1,:]@e2*frame_scale],[t_vec[2],t_vec[2]-R[2,:]@e2*frame_scale],color=color)) #y
         ax.add_line(Line3D([t_vec[0],t_vec[0]+R[0,:]@e3*frame_scale],[t_vec[1],t_vec[1]+R[1,:]@e3*frame_scale],[t_vec[2],t_vec[2]+R[2,:]@e3*frame_scale],color='g')) #z
 
-        ax.text(x=t_vec[0],y=t_vec[1],z=t_vec[2], s=rotor.name)
+        ax.text(x=t_vec[0],y=t_vec[1],z=t_vec[2], s=rotor.comb_num)
     
-    frame_scale = 0.03
+
+
+    ax.add_line(Line3D([0,frame_scale],[0,0],[0,0],color = "r")) #x 
+    ax.add_line(Line3D([0,0],[0,frame_scale],[0,0],color = "r")) #y 
+    ax.add_line(Line3D([0,0],[0,0],[0,frame_scale],color = "r")) #z 
+    ax.text(x=frame_scale,y=0,z=0, s="x")
+    ax.text(x=0,y=frame_scale,z=0, s="y")
+    ax.text(x=0,y=0,z=frame_scale, s="z")
+
+    # frame_scale = 0.03
     #Makes a Cube at centroid representing the battery
-    ax.add_line(Line3D([-frame_scale,frame_scale],[frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,frame_scale] ,[-frame_scale,-frame_scale],[frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,frame_scale] ,[frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,frame_scale] ,[-frame_scale,-frame_scale],[-frame_scale,-frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,frame_scale] ,[frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([frame_scale,frame_scale]  ,[-frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([frame_scale,frame_scale],[-frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
-    ax.add_line(Line3D([frame_scale,frame_scale],[frame_scale,frame_scale],[-frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,-frame_scale],[frame_scale,frame_scale],[-frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([frame_scale,frame_scale],[-frame_scale,-frame_scale],[-frame_scale,frame_scale],color="r"))
-    ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,-frame_scale],[-frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,frame_scale],[frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,frame_scale] ,[-frame_scale,-frame_scale],[frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,frame_scale] ,[frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,frame_scale] ,[-frame_scale,-frame_scale],[-frame_scale,-frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,frame_scale] ,[frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([frame_scale,frame_scale]  ,[-frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,frame_scale],[frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([frame_scale,frame_scale],[-frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,frame_scale],[-frame_scale,-frame_scale],color="r"))
+    # ax.add_line(Line3D([frame_scale,frame_scale],[frame_scale,frame_scale],[-frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,-frame_scale],[frame_scale,frame_scale],[-frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([frame_scale,frame_scale],[-frame_scale,-frame_scale],[-frame_scale,frame_scale],color="r"))
+    # ax.add_line(Line3D([-frame_scale,-frame_scale],[-frame_scale,-frame_scale],[-frame_scale,frame_scale],color="r"))
     ax.text(x=0,y=0,z=0, s=MR.Battery.name)
     plt.show()
 

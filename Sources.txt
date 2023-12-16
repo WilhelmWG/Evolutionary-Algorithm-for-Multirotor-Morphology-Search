@@ -1,3 +1,0 @@
-Sources:
-https://www.researchgate.net/figure/Inertial-frame-body-frame-and-Euler-angles-representations_fig2_348966011
-https://stackoverflow.com/questions/26989131/add-cylinder-to-plot

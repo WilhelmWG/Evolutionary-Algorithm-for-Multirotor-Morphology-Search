@@ -2,7 +2,7 @@ import control as ct
 import numpy as np
 import scipy as sp
 import utils as ut
-import MotorRotorAnalysis as MRA
+import ComponentAnalysis as MRA
 import warnings
 
 from typing import List, Tuple
@@ -38,7 +38,7 @@ class Rotor(Limb):
         self.sigma = sigma #which way the rotor rotates
         self.C_t = motor_dict[motor_prop_comb_num]["C_T"]
         self.C_q = self.C_t/10
-
+        self.comb_num = motor_prop_comb_num
         self.maxforce = self.C_t*self.maxrps**2
 
         #probably faster to do this outside of class init
@@ -349,7 +349,7 @@ class Controller():
             self.fully_actuated = True
             force_vectors_xy = allocation_matrix_full[:2,:]*[rotor.maxforce for rotor in rotors]
             # self.rxy = np.sqrt(np.sum(np.abs(force_vectors_xy[0]))**2+np.sum(np.abs(force_vectors_xy[1]))**2)
-            self.rxy = np.sqrt(np.min(np.array([np.sum(np.abs(force_vectors_xy[0])**2),np.sum(np.abs(force_vectors_xy[1])**2)])))/2
+            self.rxy = np.sqrt(np.min(np.array([np.sum(np.abs(force_vectors_xy[0])**2),np.sum(np.abs(force_vectors_xy[1])**2)])))
             return allocation_matrix_full
         else:
             self.fully_actuated = False

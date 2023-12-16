@@ -4,7 +4,7 @@ import MultiRotorDynamics as MRD
 import plotting as plt
 import random
 
-from MotorRotorAnalysis import motor_dict, battery_dict
+from ComponentAnalysis import motor_dict, battery_dict
 from Trajs import x_ds, b1_ds, b3_ds
 from pygad import utils as ut
 
@@ -427,6 +427,7 @@ def gen_init_pop():
     init_pop = ga_instance.initial_population
     one_mutation = mutation_by_space_x(init_pop, ga_instance)
     return one_mutation
+
 def run_ga():
     # lineage = Lineage()
     init_pop = gen_init_pop()
@@ -443,10 +444,10 @@ def run_ga():
                     mutation_num_genes=15,
                     crossover_type=None,
                     parallel_processing=["process",10],
-                    keep_elitism=0,
-                    keep_parents=-1,
+                    keep_elitism=5,
+                    keep_parents=0,
                     K_tournament=4,
-                    stop_criteria=["reach_95", "saturate_7"],
+                    stop_criteria=["reach_95", "saturate_12"],
                     on_generation=on_generation,
                     random_seed = 123
                     )

@@ -5,9 +5,6 @@ Real trajectoryPlanning with dep_cams
 Add more tests for if a MR is really controllable (saves time)
 Why 4th order no workie?
 
-
-
-
 Make lineage???????
 #Basically need to backtrace the final best solution to see how it evolved.
 #But i do not know which parent will father the final best solution.
@@ -17,10 +14,7 @@ parents_history = [] # one entry per generation
 on_parents(parents):
     for parent in parents:
 
-
-
-
-Morphos:
+Morphologies:
 - no random b1d (done)
 - random b1d (done)
 - less elitism (done)
