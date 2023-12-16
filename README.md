@@ -31,7 +31,7 @@ plotting.py contains functions for plotting 2D and 3D representations of traject
 To run the files in this repository a python environment for version 3.11.5 can be created using the EvolveEnv.yml file using the following command
 
 ```sh
-conda env create -f environment.yml
+conda env create -f EvolveEnv.yml
 ```
 
 ### Usage
