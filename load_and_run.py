@@ -6,12 +6,12 @@ import plotting as plt
 from Trajs import x_ds, b1_ds, b3_ds
 
 
-# ga_instance_path = "data/ga15mutato"
+# ga_instance_path = "data/ga_"
 solution_path = "data/bs_randomb1d.txt"
 # solution_path = "data/quadrotor.txt"
 # solution_path = "data/OctorotorHorizontal.txt"
 # solution_path = "data/tilted_hexa_rotor.txt"
-trajectory_number =19
+trajectory_number =18
 random_init = False
 
 def main():

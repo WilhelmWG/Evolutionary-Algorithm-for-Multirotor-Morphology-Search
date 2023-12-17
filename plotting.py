@@ -77,20 +77,24 @@ def plot_position_vs_ref_and_errors(t_vec_history,t_vec_desired,Psi,delta_t):
     t = np.linspace(0,num_data_points*delta_t,num_data_points)
     ylabels = ["x (meters)","y (meters)","z (meters)","e_x", "Psi"]
     titles = ["x","y","z","squared positional error", "Orientation error"]
+    plt.rcParams['font.size'] = 14
     fig, ax = plt.subplots(1,5)
+
     for i in range(t_vec_history.shape[0]):
         
-        ax[i].plot(t[1:],t_vec_history[i,1:])
-        ax[i].plot(t,t_vec_desired[i])
+        ax[i].plot(t[1:],t_vec_history[i,1:num_data_points])
+        ax[i].plot(t,t_vec_desired[i,:num_data_points])
         ax[i].set(xlabel='time (s)', ylabel=ylabels[i],
         title=titles[i])
+
+        
         ax[i].grid()
 
         fig.savefig("data/test.png")
 
-    pos_err_sqrd = np.linalg.norm(t_vec_history - t_vec_desired,axis = 0)**2
+    pos_err_sqrd = np.linalg.norm(t_vec_history - t_vec_desired[:,:num_data_points],axis = 0)**2
 
-    ax[3].plot(t[1:],pos_err_sqrd[1:])
+    ax[3].plot(t[1:],pos_err_sqrd[1:num_data_points])
     ax[3].set(xlabel='time (s)', ylabel=ylabels[3], title=titles[3])
     ax[3].grid()
 
@@ -103,9 +107,10 @@ def plot_MR_design(MR: MRD.MultiRotor):
     fig = plt.figure()
     xlim = ylim = zlim = [-0.2,0.2]
     ax = fig.add_subplot(projection='3d', xlim=xlim, ylim=ylim, zlim=zlim)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
+    ax.set_xlabel('x',size=18)
+    ax.set_ylabel('y',size=18)
+    ax.set_zlabel('z',size=18)
+    
     e1 = np.array([1,0,0])
     e2 = np.array([0,1,0])
     e3 = np.array([0,0,1])
@@ -133,9 +138,9 @@ def plot_MR_design(MR: MRD.MultiRotor):
     ax.add_line(Line3D([0,frame_scale],[0,0],[0,0],color = "r")) #x 
     ax.add_line(Line3D([0,0],[0,frame_scale],[0,0],color = "r")) #y 
     ax.add_line(Line3D([0,0],[0,0],[0,frame_scale],color = "r")) #z 
-    ax.text(x=frame_scale,y=0,z=0, s="x")
-    ax.text(x=0,y=frame_scale,z=0, s="y")
-    ax.text(x=0,y=0,z=frame_scale, s="z")
+    ax.text(x=frame_scale,y=0,z=0, s="x",size = 14)
+    ax.text(x=0,y=frame_scale,z=0, s="y",size = 14)
+    ax.text(x=0,y=0,z=frame_scale, s="z",size = 14)
 
     # frame_scale = 0.03
     #Makes a Cube at centroid representing the battery
