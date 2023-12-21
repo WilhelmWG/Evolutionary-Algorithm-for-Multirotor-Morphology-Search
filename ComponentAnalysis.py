@@ -94,12 +94,12 @@ motor_dict={0  : {"mass" : 0.032 + 0.0041,      "RPM" : rpms[0,:],  "RPS" : rpms
             19 : {"mass" : 0.040 + 0.0041,      "RPM" : rpms[19,:], "RPS" : rpms[19,:]/60, "C_T": 0.000073960, "A" : currents[19,:],  "W" : powers[19,:],  "name": "T-MOTOR F80 - Pro 6040 2-blade"      , "S" : [3,4,5]}, 
             }
 
-battery_dict = {0  : {"mass" : 0.220,       "Ah" : 2.3, "S" : 4,   "name": "Tattu"                                     }, 
+battery_dict = {0  : {"mass" : 0.220,       "Ah" : 2.3,  "S" : 4,   "name": "Tattu"                                     }, 
                 1  : {"mass" : 0.374,       "Ah" : 4   , "S" : 4,   "name": "Spektrum 4s"                               }, 
                 2  : {"mass" : 0.285,       "Ah" : 4   , "S" : 3,   "name": "Spektrum 3s"                               }, 
                 3  : {"mass" : 0.536,       "Ah" : 4   , "S" : 5,   "name": "Turnigy 5S"                                }, 
                 4  : {"mass" : 0.436,       "Ah" : 5   , "S" : 4,   "name": "Gens Ace 4s"                               }, 
-                5  : {"mass" : 0.3903,      "Ah" : 6   , "S" : 4,   "name": "Auline Lilon"                              }, 
+                5  : {"mass" : 0.3903,      "Ah" : 6   , "S" : 4,   "name": "Auline Li-Ion 6000mAh"                              }, 
                 6  : {"mass" : 0.2007,      "Ah" : 3   , "S" : 4,   "name": "4s 3000mAh - 18650 - Auline Li-Ion XT60"   }, 
                 7  : {"mass" : 0.196,       "Ah" : 1.2 , "S" : 6,   "name": "Tattu 6s 1200"                             }, 
                 8  : {"mass" : 0.217,       "Ah" : 2.0 , "S" : 4,   "name": "Tattu 4s 2200"                             }, 

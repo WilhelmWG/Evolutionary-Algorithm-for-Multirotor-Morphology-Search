@@ -1,8 +1,8 @@
-import control as ct
 import numpy as np
 import pygad as ga
 import MultiRotorDynamics as MRD
 import plotting as plt
+from Trajs import x_ds, b1_ds, b3_ds
 
 
 #Physical Constants
@@ -46,106 +46,8 @@ k_x = 16*m_total
 k_v = 5.6*m_total
 k_R = 8.81*0.1
 k_omega = 2.54*0.1
-x_ds = []
-
-#Trajectory1 z+
-x_d = lambda t : np.array([0*t,0*t,1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#UPRIGHT TRAJ
-#Trajectory1 z-
-x_d = lambda t : np.array([0*t,0*t,-1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#Trajectory2 y+z+
-x_d = lambda t : np.array([0*t,1*t,1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#Trajectory3 x+z+
-x_d = lambda t : np.array([1*t,0*t,1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#Trajectory4 y+z-
-x_d = lambda t : np.array([0*t,1*t,-1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#Trajectory5 x+z-
-x_d = lambda t : np.array([1*t,0*t,-1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#Trajectory2 y+z+
-x_d = lambda t : np.array([0*t,1*t,1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
-x_ds.append(x_d)
-#Trajectory3 x+z+
-x_d = lambda t : np.array([1*t,0*t,1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
-x_ds.append(x_d)
-
-#Trajectory4 y+z-
-x_d = lambda t : np.array([0*t,1*t,-1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
-x_ds.append(x_d)
-#Trajectory5 x+z-
-x_d = lambda t : np.array([1*t,0*t,-1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,1/np.sqrt(2)*t/t,1/np.sqrt(2)*t/t])
-x_ds.append(x_d)
-
-#Trajectory5 x+y+z-
-x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,-1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-
-#Trajectory5 x+y+z-
-x_d = lambda t : np.array([1/np.sqrt(2)*t,1/np.sqrt(2)*t,1*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
 
 
-#TrajectoryLast
-x_d = lambda t : np.array([0.4*t,0.4*np.sin(np.pi*t),0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-
-#TrajectoryLast
-x_d = lambda t : np.array([0.4*np.sin(np.pi*t),0.4*t,0.6*np.cos(np.pi*t)])# x_d = lambda t : np.array([0*t,1*t,1*t])#
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-
-#Swivvle TRAJ
-x_d = lambda t : np.array([0.5*np.cos(np.pi*t),1*t,0*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-
-x_d = lambda t : np.array([1*t,0.5*np.cos(np.pi*t),0*t])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-#Swivvle + Rotation
-x_d = lambda t : np.array([0.5*np.cos(np.pi*t),1*t,0*t])
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
-
-x_d = lambda t : np.array([1*t,0.5*np.cos(np.pi*t),0*t])
-b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
-x_ds.append(x_d)
 
 
 
@@ -156,15 +58,15 @@ def main():
     dep_cams = []
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
 
-    TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d,b3_d)
-    Battery = MRD.Battery(0.6,5,6,"big")
+    TrajectoryPlanner = MRD.TrajectoryPlanner(delta_t,max_time,x_ds,b1_ds,b3_ds,False)
+    Battery = MRD.Battery(0.6,5,6,"")
     #Normal Quadrotor rotors
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([d,0,0],dtype=float),20,-1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,d,0],dtype=float),-20,1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([-d,0,0],dtype=float),20,-1,0))
     rotors.append(MRD.Rotor(m_rotor,np.array([0,0,0],dtype=float),np.array([0,-d,0],dtype=float),-20,1,0))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/8,0],dtype=float),np.array([+d/np.sqrt(2),-d/np.sqrt(2),-0.25],dtype=float),20,1,16))
-    # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/8],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,np.pi/8,0],dtype=float),np.array([+d/np.sqrt(2),-d/np.sqrt(2),-0.25],dtype=float),20,1,16))
+    rotors.append(MRD.Rotor(m_rotor,np.array([0,0,np.pi/8],dtype=float),np.array([-d/np.sqrt(2),d/np.sqrt(2),-0.25],dtype=float),20,-1,16))
     
     #Custom
     # rotors.append(MRD.Rotor(m_rotor,np.array([0,0,-np.pi/8],dtype=float),np.array([d,0,0],dtype=float),20,-1,16))
@@ -195,6 +97,8 @@ def main():
     print(f"Sum of Reaction Torque: {quad.calculate_reaction_torque_bf()}")
     # for i in range(int(6)):
     #     quad.simulate_timestep(delta_t,obst_wf)
+    for i in range(19):
+        quad.next_trajectory(False)
     if(quad.maxTzi > 2*g*quad.total_mass):
         print(f"{quad.maxTzi} > {2*g*quad.total_mass}")
         for i in range(int(max_time/delta_t)):
@@ -217,9 +121,9 @@ def main():
     # print(np.unravel_index(np.argmax(quad.dep_cams[0].depth_frame),quad.dep_cams[0].depth_frame.shape))
     # print(quad.IMU.R_est)
     # print(quad.IMU.gyro_bias_est)
-    # plt.plot_attitude(quad.rot_vec_history, quad.IMU.rot_vec_est_history, delta_t)
-    # plt.plot_position_2d(quad.t_vec_history,delta_t)
-    # plt.plot_position_3d(quad.t_vec_history,obst_wf)
+    plt.plot_attitude(quad.rot_vec_history, quad.IMU.rot_vec_est_history, delta_t)
+    plt.plot_position_2d(quad.t_vec_history,delta_t)
+    plt.plot_position_3d(quad.t_vec_history,obst_wf)
     t = np.linspace(delta_t,max_time+delta_t,int(max_time/delta_t)+1) 
     plt.plot_position_3d([x_d(t) for x_d in x_ds],obst_wf)
     

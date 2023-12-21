@@ -2,7 +2,7 @@ import control as ct
 import numpy as np
 import scipy as sp
 import utils as ut
-import MotorRotorAnalysis as MRA
+import ComponentAnalysis as MRA
 import warnings
 
 from typing import List, Tuple
@@ -38,7 +38,7 @@ class Rotor(Limb):
         self.sigma = sigma #which way the rotor rotates
         self.C_t = motor_dict[motor_prop_comb_num]["C_T"]
         self.C_q = self.C_t/10
-
+        self.comb_num = motor_prop_comb_num
         self.maxforce = self.C_t*self.maxrps**2
 
         #probably faster to do this outside of class init
@@ -132,6 +132,7 @@ class IMU(Limb):
 
 
 
+
 class DepthCamera(Limb):
     def __init__(self,m,rot_vec,t_vec,AoV,K,res):
         super().__init__(m,rot_vec,t_vec)
@@ -165,6 +166,8 @@ class DepthCamera(Limb):
         return self.depth_frame
 
 
+
+
 class Battery():
     def __init__(self,m,Ah,S,name):
         self.m = m
@@ -178,29 +181,49 @@ class Battery():
         return self.currentAh
     def update_Ah(self, A, delta_t):
         self.currentAh -= A*(delta_t/3600) #Ampere*hours
+        
     
 
+
+
 class TrajectoryPlanner():
-    def __init__(self, delta_t, max_time, x_d_lambda,b1_d_lambda,b3_d_lambda):
+    def __init__(self, delta_t, max_time, x_ds,b1_ds,b3_ds,random_yaw):
         self.delta_t = delta_t
         self.max_time = max_time
-        self.t = np.linspace(delta_t,max_time+delta_t,int(max_time/delta_t)+1) 
-        self.x_d = x_d_lambda(self.t)
-        self.x_dot_d = derivative(x_d_lambda,self.t,dx=1e-6)
-        self.x_dot_dot_d = derivative(x_d_lambda,self.t,dx=1e-6,n=2)
-        self.b1_d = b1_d_lambda(self.t)
-        self.b3_d = b3_d_lambda(self.t)
+        self.random_yaw = random_yaw
+        self.trajectory_num = 0
+        self.t = np.linspace(delta_t,max_time+delta_t,int(max_time/delta_t)+1)
 
-        self.prev_R_d = np.eye(3)
-        self.prev_ang_vel_d = np.zeros((3,))
-        self.ang_vel_dot_d = np.zeros((3,))
+        self.x_ds = [x_d(self.t) for x_d in x_ds]
+        self.x_dot_ds = [derivative(x_d,self.t,dx=1e-6) for x_d in x_ds]
+        self.x_dot_dot_ds = [derivative(x_d,self.t,dx=1e-6,n=2) for x_d in x_ds]
+        
+        
+        self.b1_ds = [b1_d(self.t) for b1_d in b1_ds]
+        self.b3_ds = [b3_d(self.t) for b3_d in b3_ds]
+
 
         
     def get_trajectory(self,time):
         return self.x_d[:,int(time/self.delta_t)],self.x_dot_d[:,int(time/self.delta_t)],self.x_dot_dot_d[:,int(time/self.delta_t)], self.b1_d[:,int(time/self.delta_t)], self.b3_d[:,int(time/self.delta_t)]
 
+    def load_next_trajectory(self):
+        self.x_d = self.x_ds[self.trajectory_num]
+        self.x_dot_d = self.x_dot_ds[self.trajectory_num]
+        self.x_dot_dot_d = self.x_dot_dot_ds[self.trajectory_num]
+        t = self.t
+        if self.random_yaw:
+            theta = np.random.uniform(0,2*np.pi)
+            self.b1_d = np.array([np.cos(theta)*t/t,np.sin(theta)*t/t,0*t])
+        else:
+            self.b1_d = self.b1_ds[self.trajectory_num]
+        self.b3_d = self.b3_ds[self.trajectory_num]
+        self.trajectory_num += 1
 
-
+        self.prev_R_d = np.eye(3)
+        self.R_r = np.eye(3)
+        self.prev_ang_vel_d = np.zeros((3,))
+        self.ang_vel_dot_d = np.zeros((3,))
 
 
 
@@ -246,30 +269,27 @@ class Controller():
         return b3d
 
     def calculate_errors(self, m, time, R_mat, ang_vel, t_vec, t_vec_dot):
-
         delta_t = self.TP.delta_t
         e3 = np.array([0,0,1],dtype = float)
         
         self.update_trajectory(time)
         x_d, x_dot_d, x_dot_dot_d, b1_r, b3_r = self.traj
-
+        b2_r = np.cross(b3_r,b1_r)
+        R_r = np.array([b1_r,b2_r,b3_r]).T
         #Positional errors
         e_x = t_vec - x_d
         e_v = t_vec_dot - x_dot_d
 
         #Calculate R_d
         fr = -m*self.k_x*e_x - m*self.k_v*e_v+m*g*e3+m*x_dot_dot_d
-        b3_d = fr/np.linalg.norm(fr)
+        # b3_d = fr/np.linalg.norm(fr)
         b3_d = self.get_b3d(b3_r,fr,16)
-        
         
         cross31 = np.cross(b3_d,b1_r)
         b2_d = cross31/np.linalg.norm(cross31)
         b1_d_new = np.cross(b2_d,b3_d)
         R_d = np.array([b1_d_new,b2_d,b3_d]).T
 
-        
-        
         #Calculate ang_vel
         delta_R_d = self.TP.prev_R_d.T@R_d
         q = R.from_matrix(delta_R_d).as_quat()
@@ -289,6 +309,7 @@ class Controller():
         e_omega = ang_vel-R_mat.T@R_d@ang_vel_d
         
         #update previous with current
+        self.TP.R_r = R_r
         self.TP.prev_R_d = R_d
         self.TP.prev_ang_vel_d = ang_vel_d
         return e_x, e_v, e_R, e_omega
@@ -328,7 +349,7 @@ class Controller():
             self.fully_actuated = True
             force_vectors_xy = allocation_matrix_full[:2,:]*[rotor.maxforce for rotor in rotors]
             # self.rxy = np.sqrt(np.sum(np.abs(force_vectors_xy[0]))**2+np.sum(np.abs(force_vectors_xy[1]))**2)
-            self.rxy = np.sqrt(np.min(np.array([np.sum(np.abs(force_vectors_xy[0])**2),np.sum(np.abs(force_vectors_xy[1])**2)])))/2
+            self.rxy = np.sqrt(np.min(np.array([np.sum(np.abs(force_vectors_xy[0])**2),np.sum(np.abs(force_vectors_xy[1])**2)])))
             return allocation_matrix_full
         else:
             self.fully_actuated = False
@@ -361,14 +382,6 @@ class Controller():
 
 
     
-
-
-
-
-
-    
-
-
 
 
 
@@ -499,30 +512,41 @@ class MultiRotor:
             depth_frames.append(dep_cam.depth_frame)
         return depth_frames
     
-    def reset_state(self):
+    def reset_state(self, random_init):
+        self.time = 0
         self.t_vec = np.zeros((3,))
-        self.T = ut.transformation_matrix(self.R,self.t_vec)
-        # self.rot_vec = np.zeros((3,))
-        # self.R = np.eye(3)
+        if random_init:
 
-    def load_new_trajectory(self,delta_t, max_time, x_d, b_1d, b_3d):
-        self.TP = TrajectoryPlanner(delta_t,max_time,x_d,b_1d,b_3d)
+            self.t_vec_dot = np.random.uniform(-0.25,0.25,3)
+            self.rot_vec = np.random.uniform(-np.pi/8,np.pi/8,3)
+            self.ang_vel = np.random.uniform(-np.pi/8,np.pi/8,3)
+        else: 
+            self.t_vec_dot = np.zeros((3,))
+            self.rot_vec = np.zeros((3,))
+            self.ang_vel = np.zeros((3,))
+
+        self.R = R.from_euler("zxy",self.rot_vec).as_matrix()
+        self.T = ut.transformation_matrix(self.R,self.t_vec)
+        self.t_vec_history = np.reshape(self.t_vec,(3,1))
+        self.rot_vec_history = np.reshape(self.rot_vec,(3,1))
+        self.rot_err_history = np.array([])
+        
+
+    def next_trajectory(self,random_init):
+        self.reset_state(random_init)
+        self.Controller.TP.load_next_trajectory()
 
 
     def simulate_timestep(self,delta_t,obst_wf):
         valid = True
         forces_bf = self.calculate_sum_of_forces_bf()
-        # print(f"Forces in world frame: {self.R@forces_bf}")
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
-        # if(self.t_vec[2] < 0):
-        #     valid = False
         if(np.linalg.norm(self.t_vec - self.Controller.TP.x_d[:,int(self.time/delta_t)]) > 1) :
             valid = False
-        # print(f"x = {self.t_vec}")
         self.R += self.R_dot*delta_t
 
-        #Double transform to maintain SO(3) (Kinda cheating), Should not be included when using ode45
+        #Double transform to maintain SO(3)
         self.rot_vec = R.from_matrix(self.R).as_euler("zxy")
         self.R  = R.from_euler("zxy",self.rot_vec).as_matrix()
         
@@ -543,7 +567,7 @@ class MultiRotor:
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
-        Psi = 1/2*(np.eye(3)-self.Controller.TP.prev_R_d.T@self.R)
+        Psi = 1/2*np.trace((np.eye(3)-self.Controller.TP.R_r.T@self.R))
         self.rot_err_history = np.append(self.rot_err_history,Psi)
         # self.set_depth_frames(obst_wf)
         # self.depth_frames = self.get_depth_frames()
@@ -554,7 +578,7 @@ class MultiRotor:
     def simulate(self,max_time,delta_t, obst_wf):
         np.seterr(all="ignore")
         warnings.filterwarnings('ignore')
-
+        
         if(self.maxTzi > 2*g*self.total_mass and self.Controller.controllable != False):
             # print(f"{self.maxTzi} > {2*g*self.total_mass}")
             for i in range(int(max_time/delta_t)):

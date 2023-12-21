@@ -4,31 +4,27 @@ import MultiRotorDynamics as MRD
 import plotting as plt
 import random
 
-from MotorRotorAnalysis import motor_dict, battery_dict
+from ComponentAnalysis import motor_dict, battery_dict
+from Trajs import x_ds, b1_ds, b3_ds
 from pygad import utils as ut
 
 
 g = 9.81
 #simulation parameters
+delta_t = 0.01 #seconds
+max_time = 5
+
+#obstacles (unused)
 obst_wf = np.ones((3,3))*2
 obst_wf[2,2] = 5
 obst_wf[1,1] = 4
 obst_wf[0,0] = 5
-delta_t = 0.01 #seconds
-max_time = 20
 
-#Trajectory
-# x_d = lambda t : np.array([0.4*t+1,0.4*np.sin(np.pi*t)+1,0.6*np.cos(np.pi*t)+1])##
-# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])# b1_d = lambda t : np.array([1*t,0*t,0*t])# b1_d = lambda t : np.array([np.cos(np.pi*t),np.sin(np.pi*t),0*t])
-x_d = lambda t : np.array([0*t+1,1*t+1,1*t+1])
-b1_d = lambda t : np.array([1*t/t,0*t,0*t])
-b3_d = lambda t : np.array([0*t,0*t,1*t/t])
+
 
 m_IMU = 0.02
 m_dep_cam = 0.03
 m_centroid = 0.148
-m_rotor = 0.0 #accounted for
-m_total = m_centroid + m_rotor*4 + m_IMU + m_dep_cam #migrate from here
 d = 0.3
 max_angle = np.pi/2
 
@@ -52,8 +48,7 @@ k_x_max = 20
 k_v_max = 10
 k_R_max = 10
 k_omega_max = 5
-
-
+random_yaw = False
 
 #GA PARAMS
 #If the user did not assign the initial population to the initial_population parameter,
@@ -61,10 +56,11 @@ k_omega_max = 5
 # Moreover, the mutation is applied based on this parameter.
 num_motor_comb = 20
 num_battery_types = 14
-num_generations = 100
-num_parents_mating = 25
+num_generations = 50
+num_parents_mating = 50
 sol_per_pop = 200
 
+#GENE SPACE
 #[num_rotors, num_depcams]
 gene_space = [range(4,9), [1,2]]
 n_rotor_max = 8
@@ -74,7 +70,7 @@ for i in range(n_rotor_max):
     gene_space.append(range(num_motor_comb)) #ncomb
     for i in range(3):
         gene_space.append({'low': -max_angle, 'high': max_angle}) #angles
-    gene_space.append({'low': 0, 'high': d}) #absolute value of displacement
+    gene_space.append({'low': d/2, 'high': d}) #absolute value of displacement
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
     gene_space.append([-1,1]) #sigma
@@ -83,21 +79,18 @@ for i in range(n_rotor_max):
 for i in range(n_depcam_max):
     for i in range(3):
         gene_space.append({'low': -max_angle, 'high': max_angle})#angles
-    gene_space.append({'low': 0, 'high': d}) #radius
+    gene_space.append({'low': d/2, 'high': d}) #radius
     for i in range(3):
         gene_space.append({'low': -1, 'high': 1}) #direction of displacement
 
 gene_space.append(range(num_battery_types))
-
 
 gene_space.append({'low': 0, 'high': k_x_max})
 gene_space.append({'low': 0, 'high': k_v_max})
 gene_space.append({'low': 0, 'high': k_R_max})
 gene_space.append({'low': 0, 'high': k_omega_max})
 
-
 num_genes = len(gene_space)
-
 
 
 
@@ -151,7 +144,7 @@ def load_MR_from_sol(solution):
 
     Battery = MRD.Battery(bat_m,bat_Ah,bat_S,bat_name)
     IMU = MRD.IMU(m_IMU,np.array([0,0,np.pi/2],dtype=float),np.array([0,0,0],dtype=float),gyro_bias,magnet_bias, k_a,k_m,k_b)
-    TP = MRD.TrajectoryPlanner(delta_t,max_time,x_d,b1_d,b3_d)
+    TP = MRD.TrajectoryPlanner(delta_t,max_time,x_ds,b1_ds,b3_ds,random_yaw)
     Controller = MRD.Controller(k_x,k_v,k_R, k_omega, TP,rotors)
     MR = MRD.MultiRotor(m_centroid,
                           rot_vec=np.array([0,0,0],dtype=float),
@@ -170,25 +163,40 @@ def load_MR_from_sol(solution):
 
 
 def fitness_func(ga_instance, solution, solution_idx):
+    fitness = 0
+    failed_traj_count = 0
+    random_init = True
     MR = load_MR_from_sol(solution)
-    valid = MR.simulate(max_time,delta_t,obst_wf)
-    w_t = 1
-    w_r = 1 
-    w_A = 100
-    if valid:
-        fitness = -w_t*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_r*np.linalg.norm(MR.rot_err_history)+ w_A*MR.Battery.currentAh/MR.Battery.maxAh
+    for i in range(len(MR.Controller.TP.x_ds)-1):
+        traj_fitness = 0
+        MR.next_trajectory(random_init)
+        valid = MR.simulate(max_time,delta_t,obst_wf)
         
-        # print(f"FITNESS:::::: {fitness}")
-    
-        if np.isnan(fitness):
-            fitness = -1
-        else:
-            print(f"Battery left: {MR.Battery.currentAh/MR.Battery.maxAh}")
-            print(f"FITNESS:::::: {fitness}")
+        w_t = 1
+        w_r = 1 
+        w_A = 100
+
+        if valid:
+            traj_fitness = -w_t*np.linalg.norm(MR.t_vec_history - MR.Controller.TP.x_d) - w_r*np.linalg.norm(MR.rot_err_history)
+            
+            # print(f"FITNESS:::::: {fitness}")
         
-    else: 
-        fitness = -1
+            if np.isnan(traj_fitness):
+                traj_fitness = -100
+                failed_traj_count += 1
+        else: 
+            traj_fitness = -100
+            failed_traj_count += 1
+
+        fitness += traj_fitness
+
+    if not np.isnan(w_A*MR.Battery.currentAh/MR.Battery.maxAh) and not (MR.Battery.currentAh/MR.Battery.maxAh == 1):
+        fitness += w_A*MR.Battery.currentAh/MR.Battery.maxAh
     
+
+    print(f"Battery left: {MR.Battery.currentAh/MR.Battery.maxAh}")
+    print(f"FITNESS:::::: {fitness}")
+    print(f"failed trajectories : {failed_traj_count}")
     
     return fitness
 
@@ -208,7 +216,7 @@ def motor_comb_idxs():
     return idxs
 
 
-
+#Slightly modified from PyGAD source
 def mutation_by_space_x(offspring,ga_instance):
 
     """
@@ -360,23 +368,89 @@ def mutation_by_space_x(offspring,ga_instance):
     return offspring
 
 
+
+
+# class Lineage():
+#     def __init__(self):
+#         self.lineage = None
+
+#     def track_lineage(self,ga_instance, parents):
+#         if type(self.lineage) == type(None):
+#             self.lineage = parents
+#             print("hehey")
+#         else:
+#             for parent in parents:
+#                 for grandparent in self.lineage:
+#                     parent_diff = parent == grandparent
+#                     print(parent_diff)
+#                     zeros = ga_instance.num_genes - np.count_nonzero(parent_diff)
+#                     print(zeros)
+#                     if zeros <= (ga_instance.mutation_num_genes):
+#                         print("letsgooooo")
+
+
+
+
+
+#         print(type(parents))
+
+def on_generation(ga_instance):
+    print(f"generations Completed: {ga_instance.generations_completed}")
+
+
+
+
+#Generates an initial population with motor-battery constraints enforced by
+# one iteration of the mutation operator
+def gen_init_pop():
+    
+    ga_instance = ga.GA(num_generations=num_generations,
+                num_parents_mating=num_parents_mating,
+                sol_per_pop=sol_per_pop,
+                num_genes=num_genes,
+                gene_space=gene_space,
+                parent_selection_type='tournament',
+                fitness_func=fitness_func,
+                save_best_solutions=True,
+                mutation_type=mutation_by_space_x,
+                mutation_num_genes=15,
+                crossover_type=None,
+                parallel_processing=["process",10],
+                keep_elitism=5,
+                keep_parents=0,
+                K_tournament=4,
+                stop_criteria=["reach_95", "saturate_7"],
+                on_generation=on_generation,
+                random_seed = 123
+                )
+
+    init_pop = ga_instance.initial_population
+    one_mutation = mutation_by_space_x(init_pop, ga_instance)
+    return one_mutation
+
 def run_ga():
+    # lineage = Lineage()
+    init_pop = gen_init_pop()
     ga_instance = ga.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
                     sol_per_pop=sol_per_pop,
                     num_genes=num_genes,
                     gene_space=gene_space,
+                    initial_population=init_pop,
                     parent_selection_type='tournament',
                     fitness_func=fitness_func,
                     save_best_solutions=True,
                     mutation_type=mutation_by_space_x,
-                    mutation_num_genes=4,
+                    mutation_num_genes=15,
                     crossover_type=None,
                     parallel_processing=["process",10],
                     keep_elitism=5,
+                    keep_parents=0,
                     K_tournament=4,
-                    stop_criteria=["reach_95", "saturate_15"],
-                    random_seed = 123)
+                    stop_criteria=["reach_95", "saturate_12"],
+                    on_generation=on_generation,
+                    random_seed = 123
+                    )
                     
     ga_instance.summary()
     ga_instance.run()
