@@ -32,3 +32,5 @@ One key example of using this repository is as follows.
 4. Modify load_and_run.py to point to the file path created by main.py.
 5. Run load_and_run.py to see the performance of the best solution of the genetic algorithm.
 
+Running load_and_run.py can also be used to view the 3D models of each solution in the /data folder for a better view than in the project report.
+
