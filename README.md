@@ -18,7 +18,7 @@ plotting.py contains functions for plotting 2D and 3D representations of traject
 
 ## Prerequisites
 
-To run the files in this repository a python environment for version 3.11.5 can be created using the EvolveEnv.yml file using the following command
+To run the files in this repository a python environment for version 3.11.5 can be created with Anaconda using the EvolveEnv.yml file using the following command.
 
 ```sh
 conda env create -f EvolveEnv.yml
