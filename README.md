@@ -12,7 +12,7 @@ plotting.py contains functions for plotting 2D and 3D representations of traject
 - tests.py defines test for utility functions
 - load_and_run.py loads a MultiRotor from a .txt file and simulates it tracking one trajectory and plots its performance and 3D model, used for evaluating results from a genetic algorithm run.
 - main.py runs a genetic algorithm, writes the best solution and GA_instance to files and plots the fitness, genes and 3D model of the MultiRotor.
-
+- The /data folder contains the best solution for the evolutionary runs described in the project report. They can be tested using load_and_run.py. 
 
 # Getting Started
 
