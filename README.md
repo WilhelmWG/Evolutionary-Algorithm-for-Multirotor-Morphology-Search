@@ -3,13 +3,13 @@ This project is an implementation of general multirotor dynamics and an evolutio
 
 # File contents
 - GA.py contains the majority of parameters and function required to make a pygad.GA instance.
-- MultiRotorDynamics.py defines the MultiRotor class, its dynamics and functions for simulating it following a trajectory.
+- MultiRotorDynamics.py defines the MultiRotor class, its dynamics and functions for simulating it following a trajectory. In addition, there is some code defining an IMU orientation estimator and a depth camera object. Neither of these are utilised in the simulation.
 - MotorRotorAnalysis.py defines dictionaries that contain all necessary information on motor-rotor combinations and batteries used in this project.
 - Trajs.py defines all trajectories the MultiRotor tracks when evaluating its fitness.
 - old_main.py runs a predefined MultiRotor for a single trajectory, primarily used for testing
 plotting.py contains functions for plotting 2D and 3D representations of trajectories and a function for making a 3D model of a MultiRotor object.
 - utils.py contains some helpful utility functions for linear algebra
-- tests.py defines test for utility functions
+- tests.py defines tests for the utility functions
 - load_and_run.py loads a MultiRotor from a .txt file and simulates it tracking one trajectory and plots its performance and 3D model, used for evaluating results from a genetic algorithm run.
 - main.py runs a genetic algorithm, writes the best solution and GA_instance to files and plots the fitness, genes and 3D model of the MultiRotor.
 - The /data folder contains the best solution for the evolutionary runs described in the project report. They can be tested using load_and_run.py. 
