@@ -402,6 +402,7 @@ class MultiRotor:
         self.T = ut.transformation_matrix(self.R,t_vec)
 
         self.rotors = rotors
+        self.num_rotors = np.size(rotors)
         self.dep_cams = dep_cams
         self.IMU = IMU
         self.Controller = Controller
