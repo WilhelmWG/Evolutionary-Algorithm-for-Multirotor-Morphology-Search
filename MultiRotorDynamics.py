@@ -575,6 +575,45 @@ class MultiRotor:
         
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
         return valid
+    
+    def step(self,delta_t,obst_wf):
+        valid = True
+        forces_bf = self.calculate_sum_of_forces_bf()
+        #Pose
+        self.t_vec += self.t_vec_dot*delta_t #1a)
+        if(np.linalg.norm(self.t_vec - self.Controller.TP.x_d[:,int(self.time/delta_t)]) > 1) :
+            valid = False
+        self.R += self.R_dot*delta_t
+
+        #Double transform to maintain SO(3)
+        self.rot_vec = R.from_matrix(self.R).as_euler("zxy")
+        self.R  = R.from_euler("zxy",self.rot_vec).as_matrix()
+        
+        #Angular velocity
+        self.ang_vel += self.ang_vel_dot*delta_t
+        
+        #velocity
+        self.ang_vel_dot = np.linalg.solve(self.J,(-np.cross(self.ang_vel,self.J@self.ang_vel)+self.calculate_sum_of_torques_bf())) #1d)
+        self.t_vec_dot += self.R@forces_bf*delta_t/self.total_mass #1b)
+        self.R_dot = self.R@ut.skew(self.ang_vel) #1c)
+        self.time += delta_t
+        
+        #update values
+        rotor_forces = self.Controller.get_rotor_forces(self.total_mass, self.J, self.time,self.R,self.ang_vel,self.t_vec,self.t_vec_dot)
+        self.set_rotor_forces(rotor_forces)
+        self.update_A()
+        self.Battery.update_Ah(self.A,delta_t)
+        self.T = ut.transformation_matrix(self.R,self.t_vec)
+        self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
+        self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
+        Psi = 1/2*np.trace((np.eye(3)-self.Controller.TP.R_r.T@self.R))
+        self.rot_err_history = np.append(self.rot_err_history,Psi)
+        # self.set_depth_frames(obst_wf)
+        # self.depth_frames = self.get_depth_frames()
+        
+        self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
+        return valid
+
 
     def simulate(self,max_time,delta_t, obst_wf):
         np.seterr(all="ignore")
