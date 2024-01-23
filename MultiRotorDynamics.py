@@ -386,8 +386,9 @@ class Controller():
 
 
 class MultiRotor:
-    def __init__(self, m,  rot_vec, t_vec, ang_vel, rotors: List[Rotor], dep_cams: List[DepthCamera], IMU: IMU, Controller: Controller, Battery: Battery):
+    def __init__(self, delta_t, m,  rot_vec, t_vec, ang_vel, rotors: List[Rotor], dep_cams: List[DepthCamera], IMU: IMU, Controller: Controller, Battery: Battery):
         self.time = 0
+        self.delta_t = delta_t
         self.m = m
         
         
@@ -491,7 +492,7 @@ class MultiRotor:
     def set_rotor_forces(self,rotor_forces):
         i = 0
         for rotor in self.rotors:
-            rotor.set_force(rotor_forces[i])
+            rotor.set_force(rotor_forces[i]*rotor.maxforce)
             i += 1
 
     def set_depth_frames(self, obst_wf):
@@ -576,8 +577,9 @@ class MultiRotor:
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
         return valid
     
-    def step(self,delta_t,obst_wf):
+    def step(self,a):
         valid = True
+        delta_t = self.delta_t
         forces_bf = self.calculate_sum_of_forces_bf()
         #Pose
         self.t_vec += self.t_vec_dot*delta_t #1a)
@@ -599,20 +601,50 @@ class MultiRotor:
         self.time += delta_t
         
         #update values
-        rotor_forces = self.Controller.get_rotor_forces(self.total_mass, self.J, self.time,self.R,self.ang_vel,self.t_vec,self.t_vec_dot)
-        self.set_rotor_forces(rotor_forces)
+        # rotor_forces = self.Controller.get_rotor_forces(self.total_mass, self.J, self.time,self.R,self.ang_vel,self.t_vec,self.t_vec_dot)
+        self.set_rotor_forces(a)
         self.update_A()
         self.Battery.update_Ah(self.A,delta_t)
         self.T = ut.transformation_matrix(self.R,self.t_vec)
         self.t_vec_history = np.append(self.t_vec_history,np.reshape(self.t_vec,(3,1)),1)
         self.rot_vec_history = np.append(self.rot_vec_history,np.reshape(self.rot_vec,(3,1)),1)
-        Psi = 1/2*np.trace((np.eye(3)-self.Controller.TP.R_r.T@self.R))
+        
+        
+        x_d, x_dot_d, x_dot_dot_d, b1_d, b3_d = self.Controller.TP.get_trajectory(self.time)
+        cross31 = np.cross(b3_d,b1_d)
+        b2_d = cross31/np.linalg.norm(cross31)
+        b1_d_new = np.cross(b2_d,b3_d)
+        R_d = np.array([b1_d_new,b2_d,b3_d]).T
+
+        #Calculate ang_vel
+        delta_R_d = self.Controller.TP.prev_R_d.T@R_d
+        q = R.from_matrix(delta_R_d).as_quat()
+        if not np.linalg.norm(q[0:3]) == 0:
+            axis = q[0:3]/np.linalg.norm(q[0:3])
+            angle = 2*np.arccos(q[3])
+        else:
+            axis = np.zeros((3,))
+            angle = 0
+        ang_vel_d = angle*axis/delta_t
+
+        self.Controller.TP.prev_R_d = R_d
+
+        x_err = self.t_vec - x_d
+        x_dot_err = self.t_vec_dot - x_dot_d
+        ang_vel_err = self.ang_vel - ang_vel_d
+        Psi = 1/2*np.trace((np.eye(3)-R_d.T@self.R))
         self.rot_err_history = np.append(self.rot_err_history,Psi)
+
+        
+
+        observation = np.array([x_err, x_dot_err, self.R, Psi, ang_vel_err])
+        reward = 1*valid - 1*np.linalg.norm(a) - 1*Psi - 1*ang_vel_err - 1*x_err-1*x_dot_err
+
         # self.set_depth_frames(obst_wf)
         # self.depth_frames = self.get_depth_frames()
         
         self.IMU.update_estimates(forces_bf, self.ang_vel, self.total_mass,self.R,delta_t)
-        return valid
+        return observation, reward, valid
 
 
     def simulate(self,max_time,delta_t, obst_wf):
